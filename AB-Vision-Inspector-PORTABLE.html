@@ -1,0 +1,783 @@
+<!doctype html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="AB-Vision Inspector: inspección visual industrial abierta, local y gratuita. MS ROBOTIKA.">
+<title>AB-Vision Inspector — MS ROBOTIKA · Sin instalación</title><style>
+/* SPDX-License-Identifier: MIT · Copyright (c) 2026 MS ROBOTIKA */
+:root{font-family:Inter,'Segoe UI',system-ui,sans-serif;background:#0a121c;color:#e7f0f3;font-synthesis:none;--ink:#09121b;--panel:#111e2a;--line:#233746;--muted:#8498a6;--cyan:#47d8bd;--lime:#a2f0dc;--red:#ff7381}*{box-sizing:border-box}body{margin:0;min-height:100vh}button,input,select{font:inherit}button,.button,.flat{cursor:pointer;background:#1b2b39;border:1px solid #334b5a;color:#e1eefa;padding:10px 13px;border-radius:8px;font-size:12px;font-weight:650;transition:.16s ease}button:hover,.button:hover{border-color:#5f948e;background:#243b47}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}button:disabled{opacity:.4;cursor:not-allowed}a{color:inherit;text-decoration:none}.shell{display:flex}.side{position:fixed;inset:0 auto 0 0;width:230px;background:#0b1723;border-right:1px solid #1d303d;padding:27px 17px;display:flex;flex-direction:column;z-index:2}.logo{display:flex;align-items:center;gap:11px}.logo-icon{display:grid;place-items:center;background:#193844;border:1px solid #327366;border-radius:11px;width:43px;height:43px;font-size:24px;color:var(--cyan)}.logo strong{font-size:12px;letter-spacing:1.3px;display:block}.logo small{font-size:9px;color:#70948c;letter-spacing:1.6px}.side-caption{font-size:9px;color:#688291;letter-spacing:2px;font-weight:800;margin:57px 11px 15px}.side nav{display:grid;gap:5px}.side nav a{border-radius:8px;color:#8ba1ad;padding:13px;font-size:12px;display:flex;align-items:center;gap:12px}.side nav a span{color:#688391;font-size:18px}.side nav a:hover{background:#152a36}.side nav a.active{background:#123c3d;color:#e8fff7;border:1px solid #245752}.side nav a.active span{color:var(--cyan)}.side-bottom{margin-top:auto;border-top:1px solid #233440;padding:20px 8px 0;font-size:11px;color:#9caeb7}.side-bottom p{line-height:1.85;color:#607987;font-size:10px}.online-indicator{display:inline-block;background:#48d3b4;width:7px;height:7px;border-radius:50%;box-shadow:0 0 12px #48d3b455;margin-right:5px}main{margin-left:230px;padding:30px 36px 20px;width:calc(100% - 230px);max-width:1800px}.topbar{display:flex;justify-content:space-between;gap:20px;align-items:center;margin-bottom:23px}.breadcrumb,.overline{font-size:9px;color:#71b4a9;font-weight:750;letter-spacing:2px}h1{font-size:30px;letter-spacing:-1.2px;margin:7px 0}h1 em{color:var(--cyan);font-style:normal}.version{font-size:10px;letter-spacing:1px;color:#8ba4b0;border:1px solid #334c58;border-radius:4px;padding:5px 8px;vertical-align:middle;margin-left:8px}.lead{color:#8397a7;font-size:12px;margin:9px 0}.top-actions{display:flex;align-items:center;gap:15px}.privacy{font-size:10px;letter-spacing:1.2px;font-weight:800;color:#70dfb9}.ghost{border:1px solid #314350;border-radius:7px;padding:9px 12px;color:#b2c5cc;font-size:11px}.notice-rail{display:flex;align-items:center;gap:15px;border:1px solid #574c32;background:#332c20;border-radius:9px;padding:13px 17px;color:#d8c7a3;font-size:11px;line-height:1.65;margin-bottom:19px}.notice-icon{font-size:21px}.main-grid{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(310px,.85fr);gap:18px}.work-card,.config-card,.history-card{border:1px solid #2b4150;background:#111e2a;border-radius:12px;min-width:0;overflow:hidden}.card-head{padding:19px 22px;display:flex;align-items:center;justify-content:space-between;gap:15px;border-bottom:1px solid #243746}.card-head h2{font-size:17px;letter-spacing:-.4px;margin:6px 0 0;font-weight:650}.live-status,.small-pill{font-size:9px;letter-spacing:1px;font-weight:800;background:#29333e;border:1px solid #344654;padding:7px 10px;border-radius:6px;color:#9faebb;white-space:nowrap}.live-status.ready{background:#123d39;border-color:#285f56;color:#8ef2d5}.viewer{background:#070e15;position:relative;margin:20px 20px 13px;border:1px solid #294351;border-radius:8px;overflow:hidden;aspect-ratio:16/9;display:flex;align-items:center}.viewer canvas{display:block;max-width:100%;width:100%;height:100%;object-fit:contain;touch-action:none;cursor:crosshair}.viewer-status{position:absolute;bottom:10px;left:12px;right:12px;display:flex;justify-content:space-between;gap:10px;pointer-events:none;font-size:10px;color:#c9efe8;text-shadow:0 1px 5px #000;background:#070f1499;border-radius:4px;padding:6px 10px}.viewer-corner{position:absolute;width:20px;height:20px;pointer-events:none;border-color:var(--cyan);border-style:solid}.tl{top:0;left:0;border-width:2px 0 0 2px}.tr{top:0;right:0;border-width:2px 2px 0 0}.bl{bottom:0;left:0;border-width:0 0 2px 2px}.br{bottom:0;right:0;border-width:0 2px 2px 0}.tool-bar{display:flex;flex-wrap:wrap;align-items:center;gap:9px;padding:6px 20px 16px}.primary{background:#1bc4a2!important;border-color:#1bc4a2!important;color:#06241f!important}.primary:hover{background:#57e5c7!important}.file-button{position:relative;display:inline-flex;align-items:center;justify-content:center}.file-button input{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;top:0;left:0}.selection-bar{padding:13px 20px 18px;border-top:1px solid #243746;display:flex;gap:13px;align-items:center;flex-wrap:wrap}.check{display:flex;align-items:center;gap:8px;color:#b4c7ce;font-size:11px}.check input{accent-color:#31d2b2;width:15px;height:15px}.text-button{background:transparent;border:0;padding:3px;color:#61ddc1}.selection-bar>span{color:#7799a4;font-size:10px;margin-left:auto}.config-body{padding:19px 21px}.config-body>label{display:block;margin-bottom:17px}label{font-size:11px;color:#b6c7d0;font-weight:600}input:not([type=range]):not([type=file]):not([type=checkbox]),select{border:1px solid #304655;background:#0b1823;color:#e3eff4;border-radius:7px;min-height:38px;padding:9px 11px;width:100%;display:block;margin-top:8px;font-size:12px}input[type=range]{width:100%;accent-color:#34d4b4;cursor:pointer}.parameter{margin-bottom:15px}.parameter-head{display:flex;justify-content:space-between;align-items:center}.parameter output{background:#103936;border:1px solid #20574e;color:#a6f3df;border-radius:5px;padding:4px 7px;font-size:11px;font-variant-numeric:tabular-nums}.parameter p{color:#678593;font-size:10px;margin:4px 0}.reference-box{border:1px solid #2b4450;background:#152634;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px;border-radius:8px;margin:14px 0 18px}.reference-box strong{font-size:11px;color:#cfe3e7}.reference-box p{color:#71949b;font-size:10px;margin:5px 0}.tiny{padding:7px 9px;font-size:10px;white-space:nowrap}.config-actions{display:grid;gap:8px}.big{width:100%;min-height:43px}.recipe-actions{display:flex;flex-wrap:wrap;gap:5px;margin:18px 0}.recipe-actions .flat{font-size:10px;flex:1;padding:8px}.status-msg{border-top:1px solid #294350;padding-top:15px;font-size:11px;color:#83b4ad;line-height:1.65;min-height:45px}.status-msg.error{color:#ff98a0}.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin:18px 0}.metric{background:#111e2a;border:1px solid #2b4150;padding:21px;border-radius:10px;min-width:0}.metric>span{font-size:9px;letter-spacing:1.1px;color:#819aa7;font-weight:750}.metric strong{display:block;font-size:27px;letter-spacing:-.5px;font-variant-numeric:tabular-nums;margin:9px 0}.metric .pending{font-size:18px;color:#8298a4}.metric .ok{color:#59e9bd}.metric .nok{color:#ff7787}.metric small{font-size:10px;color:#6e8795;line-height:1.45;display:block}.history-card .history-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}.history-actions button{font-size:10px;padding:8px 10px}.destructive{color:#ff9199}.table-scroller{overflow:auto;max-height:350px}table{border-collapse:collapse;width:100%;min-width:700px;text-align:left}th{font-size:9px;color:#88a1ad;letter-spacing:1px;background:#172a38;padding:13px 20px;font-weight:700}td{font-size:11px;color:#b8c8d0;border-top:1px solid #243846;padding:13px 20px}td:first-child{color:#829bac}td.good{color:#6ce9be;font-weight:800}td.bad{color:#ff8093;font-weight:800}.empty{text-align:center;color:#7b929d;padding:30px}footer{margin:24px 0 0;display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap;font-size:10px;color:#688492}@media(max-width:1350px){.main-grid{grid-template-columns:1fr}.config-body{display:grid;grid-template-columns:repeat(2,1fr);gap:0 20px}.config-actions,.recipe-actions,.reference-box,.status-msg{grid-column:1/-1}}@media(max-width:1100px){.side{width:190px;padding:22px 11px}main{width:calc(100% - 190px);margin-left:190px;padding:25px 20px}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.top-actions{display:none}}@media(max-width:700px){.shell{display:block}.side{position:static;width:auto;padding:15px 18px}.side-caption,.side-bottom{display:none}.side nav{display:flex;gap:6px;overflow-x:auto;margin-top:12px}.side nav a{white-space:nowrap;padding:9px}.side nav a span{display:none}main{margin:0;width:100%;padding:22px 13px}h1{font-size:24px}.card-head{padding:15px}.viewer{margin:12px 11px}.tool-bar{padding:6px 11px 15px}.tool-bar button,.tool-bar .button{flex:1;white-space:nowrap}.selection-bar{padding:12px}.config-body{display:block;padding:16px}.metric{padding:15px}.metric strong{font-size:22px}.history-card .card-head{align-items:flex-start;flex-direction:column}.metric>span{line-height:1.5;display:block}.version{font-size:8px}.notice-rail{align-items:flex-start}}
+/* 0.2: calibrated measurements and LAN IP camera controls */
+.connect-panels{margin:10px 21px 0}.connection-box,.calibration-box{border:1px solid #344d5c;border-radius:10px;padding:14px;margin:14px 0;background:rgba(22,39,50,.8)}
+.connection-box summary,.calibration-box summary{cursor:pointer;font-size:13px;font-weight:700;color:#86e3cc;padding:3px 0}
+.connection-grid,.cal-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:15px 0}
+.connection-grid input,.connection-grid select,.cal-grid input{width:100%;min-width:0}
+.calibration-box{margin:14px 0;padding:12px}.small-muted{font-size:11px;line-height:1.65;color:#9badb8;margin:11px 0}
+.ip-actions,.cal-actions{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-top:12px}
+#ip-state{font-size:11px;color:#80c7b4}.small-muted code{word-break:break-word}
+#calibration-status{color:#91debc;min-height:20px}
+.calibration-box input{color:#183440;background:white}
+@media(max-width:620px){.connection-grid,.cal-grid{grid-template-columns:1fr}.connect-panels{margin:10px 9px 0}}
+
+/* Cámara y auditoría metrológica de cada fotograma */
+.camera-audit{background:#13252e;border:1px solid #315d65;border-radius:10px;padding:14px;margin:12px 0;color:#d5eaed;font-size:12px;line-height:1.65}
+.camera-audit>strong{display:block;letter-spacing:.8px;font-size:11px;color:#7bf0cf}
+.camera-audit p{margin:7px 0}
+.camera-audit small{display:block;color:#aabfc6;line-height:1.6}
+.audit-indicator{font-weight:700;padding:10px 12px;border-radius:6px;overflow-wrap:anywhere}
+.audit-good{background:#123c30;color:#75f7bc}
+.audit-bad{background:#492a29;color:#ffd1a2}
+
+</style>
+</head>
+<body>
+<div class="shell">
+<aside class="side">
+  <div class="logo"><span class="logo-icon">◈</span><div><strong>MS ROBOTIKA</strong><small>OPEN ENGINEERING</small></div></div>
+  <p class="side-caption">VISIÓN INDUSTRIAL</p>
+  <nav><a href="#vision" class="active"><span>◉</span> Inspección</a><a href="#config"><span>☷</span> Receta de análisis</a><a href="#history"><span>▤</span> Historial</a></nav>
+  <div class="side-bottom"><span class="online-indicator"></span> Motor local · v0.3.0<p>Open source · MIT<br>Procesamiento dentro de tu navegador</p></div>
+</aside>
+<main>
+<header class="topbar"><div><span class="breadcrumb">MS ROBOTIKA / QUALITY CONTROL / 001</span><h1>AB-Vision <em>Inspector</em> <span class="version">MVP 0.3</span></h1><p class="lead">Inspección visual transparente, local y sin licencias.</p></div><div class="top-actions"><span class="privacy">● PROCESAMIENTO LOCAL</span><a class="ghost documentation" href="https://github.com/msrobotika" target="_blank" rel="noopener">MS ROBOTIKA ↗</a></div></header>
+<div class="notice-rail"><span class="notice-icon">ⓘ</span><div><strong>Modo de laboratorio.</strong> El resultado OK/NOK es orientativo. Esta versión no está validada para seguridad, rechazo automático de piezas ni control de maquinaria.</div></div>
+<div class="main-grid">
+<section class="work-card" id="vision"><div class="card-head"><div><span class="overline">01 / ÁREA DE VISIÓN</span><h2>Inspección de imagen</h2></div><span class="live-status" id="feed-status">● SIN FUENTE</span></div>
+  <div class="viewer"><canvas id="overlay" width="1280" height="720" aria-label="Área de inspección: arrastra para seleccionar región de interés"></canvas><video id="camera-video" autoplay muted playsinline hidden></video><div class="viewer-status"><span id="source-label">Imagen de demostración</span><span id="image-size">1280 × 720</span></div><div class="viewer-corner tl"></div><div class="viewer-corner tr"></div><div class="viewer-corner bl"></div><div class="viewer-corner br"></div></div>
+  <div class="tool-bar"><button id="demo" class="primary">◈ Cargar demostración</button><label class="button file-button">↑ Abrir imagen<input id="image-file" type="file" accept="image/png,image/jpeg,image/webp,image/bmp"></label><button id="camera-start">◉ Iniciar cámara</button><button id="capture" disabled>◎ Capturar</button><button id="camera-stop" disabled>■ Detener</button></div>
+
+  <div class="connect-panels">
+  <details class="connection-box" id="ip-camera-panel"><summary>◉ Conectar cámara IP (JPEG / MJPEG por LAN)</summary>
+  <div class="connection-grid">
+    <label>IPv4 privada de la cámara<input id="ip-address" inputmode="decimal" placeholder="192.168.1.50" autocomplete="off"></label>
+    <label>Protocolo<select id="ip-protocol"><option value="http">HTTP</option><option value="https">HTTPS certificado válido</option></select></label>
+    <label>Puerto HTTP(S)<input id="ip-port" type="number" min="1" max="65535" value="80"></label>
+    <label>Ruta del snapshot JPEG o MJPEG<input id="ip-path" value="/snapshot.jpg" placeholder="/snapshot.jpg o /video.mjpg"></label>
+    <label>Usuario (si usa Basic)<input id="ip-user" maxlength="128" autocomplete="off"></label>
+    <label>Contraseña (no se guarda)<input id="ip-password" type="password" maxlength="256" autocomplete="off"></label>
+  </div>
+  <label class="check"><input id="ip-approved" type="checkbox">Autorizo expresamente conectarme a esta cámara de mi red privada.</label>
+  <div class="ip-actions"><button id="ip-connect" type="button">Conectar y captar</button><button id="ip-disconnect" type="button" disabled>Desconectar IP</button><span id="ip-state">Sin conexión IP</span></div>
+  <p class="small-muted">Ejemplos de URL de cámara: <code>http://192.168.1.50:80/snapshot.jpg</code> o ruta MJPEG. Solo IPv4 privada; RTSP, ONVIF y Digest pendientes. El servidor local obtiene cada fotograma; imágenes y credenciales no se envían a Internet.</p>
+  </details>
+  </div>
+  <div class="selection-bar"><label class="check"><input type="checkbox" id="roi-mode"><span>Seleccionar ROI arrastrando sobre la imagen</span></label><button class="text-button" id="roi-reset">Restablecer región</button><span id="roi-label">Imagen completa</span></div>
+</section>
+<section class="config-card" id="config"><div class="card-head"><div><span class="overline">02 / PARÁMETROS</span><h2>Receta de inspección</h2></div><span class="small-pill">EDITABLE</span></div>
+  <div class="config-body"><label>Identificador de pieza / lote<input type="text" id="lot" value="LOTE-DEMO-001" maxlength="64" placeholder="Ej. PCB-LINEA-01"></label>
+  <label>Método de detección<select id="mode"><option value="dark">Imperfecciones oscuras</option><option value="light">Zonas claras</option><option value="reference">Diferencia frente a referencia</option></select></label>
+  <div class="parameter"><div class="parameter-head"><label for="threshold">Umbral de detección</label><output id="threshold-value">90</output></div><input type="range" id="threshold" min="0" max="255" value="90"><p id="threshold-hint">Píxeles con luminosidad inferior a 90.</p></div>
+  <div class="parameter"><div class="parameter-head"><label for="min-area">Área mínima por defecto (px)</label><output id="min-area-value">20</output></div><input type="range" id="min-area" min="1" max="3000" value="20"></div>
+  <label>Máximo de defectos permitidos<input type="number" id="max-defects" min="0" max="10000" value="0"></label>
+  <div class="reference-box"><div><strong>Imagen patrón / referencia</strong><p id="reference-label">Ninguna referencia capturada</p></div><button id="set-reference" class="tiny">Tomar referencia</button></div>
+  <details id="calibration-panel" class="calibration-box" open><summary>◫ Metrología · calibración y tolerancias (mm)</summary>
+    <p class="small-muted"><strong>Calibración real:</strong> coloca una regla o patrón de longitud conocida en el MISMO plano que la pieza. Indica su longitud y pulsa «Marcar 2 puntos» para señalar sus extremos en la imagen. La distancia de cámara por sí sola no determina la escala.</p>
+    <div class="cal-grid">
+      <label>Longitud del patrón real (mm)<input id="reference-mm" type="number" min="0.01" max="100000" step="any" value="100"></label>
+      <label>Distancia al plano (mm)<input id="distance-mm" type="number" min="1" max="100000" step="any" value="500"></label>
+      <label>Ancho nominal de pieza (mm)<input id="nominal-width" type="number" min="0.01" max="100000" step="any" value="200"></label>
+      <label>Alto nominal de pieza (mm)<input id="nominal-height" type="number" min="0.01" max="100000" step="any" value="100"></label>
+      <label>Tolerancia ± (mm)<input id="dimension-tolerance" type="number" min="0" max="10000" step="any" value="2"></label>
+      <label>Umbral de pieza clara (0–255)<input id="piece-threshold" type="number" min="0" max="255" value="130"></label>
+    </div>
+    <div class="cal-actions"><button id="mark-scale" type="button">Calibrar: CIAN → MAGENTA</button><button id="clear-scale" type="button">Borrar calibración</button></div>
+    <p id="calibration-status" class="small-muted" aria-live="polite">SIN CALIBRAR · Primero captura una imagen con patrón real.</p>
+    <div class="camera-audit"><strong>AUDITORÍA DE CÁMARA POR FOTOGRAMA</strong>
+      <p>Coloca dos marcas circulares rígidas de color <b>CIAN</b> y <b>MAGENTA</b> en el mismo plano que la pieza, separadas por una distancia conocida. Marca sus centros en ese orden. El sistema las busca en <strong>cada fotograma</strong> y bloquea medidas ante variaciones de posición, escala, giro, resolución o configuración de la fuente.</p>
+      <p id="audit-status" class="audit-indicator audit-bad" aria-live="polite">NO VALIDADA · Falta patrón de calibración físico.</p>
+      <small>No sustituye una calibración intrínseca de lente, corrección de perspectiva, estudio de incertidumbre ni contraste con patrón trazable. Si falla la auditoría: SIN MEDICIÓN, nunca OK dimensional.</small>
+    </div>
+  </details>
+  <div class="config-actions"><button id="analyze" class="big primary">▶ Analizar imagen</button><button id="auto" class="big">⟳ Inspección continua: OFF</button></div>
+  <div class="recipe-actions"><button id="save-recipe" class="flat">Guardar receta</button><button id="export-recipe" class="flat">Exportar JSON</button><label class="flat file-button">Importar JSON<input id="recipe-file" type="file" accept="application/json,.json"></label></div>
+  <div class="status-msg" id="message" role="status" aria-live="polite">Listo para inspeccionar. Puedes empezar con la demostración.</div>
+  </div></section>
+</div>
+<div class="metrics"><div class="metric"><span>RESULTADO DE INSPECCIÓN</span><strong id="verdict" class="pending">SIN ANALIZAR</strong><small id="duration">Esperando imagen</small></div><div class="metric"><span>DEFECTOS DETECTADOS</span><strong id="defects">—</strong><small>Componentes que superan el área mínima</small></div><div class="metric"><span>SUPERFICIE AFECTADA</span><strong id="coverage">—</strong><small>Porcentaje de la región inspeccionada</small></div><div class="metric"><span>ANCHO × ALTO (mm)</span><strong id="measured-size">SIN CALIBRAR</strong><small id="dimension-status">Sin metrología verificada</small></div><div class="metric"><span>INSPECCIONES EN SESIÓN</span><strong id="count">0</strong><small>Historial exportable a CSV</small></div></div>
+<section class="history-card" id="history"><div class="card-head"><div><span class="overline">03 / TRAZABILIDAD</span><h2>Registro de inspecciones</h2></div><div class="history-actions"><button id="save-png">Exportar imagen anotada</button><button id="export-csv">Exportar CSV</button><button id="export-json">Exportar JSON</button><button id="clear-history" class="destructive">Vaciar</button></div></div>
+  <div class="table-scroller"><table><thead><tr><th>HORA</th><th>IDENTIFICADOR</th><th>MODO</th><th>DEFECTOS</th><th>COBERTURA</th><th>RESULTADO</th><th>DIMENSIONES (mm)</th><th>DURACIÓN</th></tr></thead><tbody id="history-rows"><tr><td colspan="8" class="empty">Los análisis realizados durante esta sesión aparecerán aquí.</td></tr></tbody></table></div></section>
+<footer><span>© 2026 MS ROBOTIKA · Diseño y motor independientes · Licencia MIT</span><span>Datos e imágenes: procesados localmente · Sin telemetría</span></footer>
+</main></div>
+<canvas id="source" width="1280" height="720" hidden></canvas>
+<script>
+/* SPDX-License-Identifier: MIT
+ * Copyright (c) 2026 MS ROBOTIKA
+ * Original, dependency-free image segmentation and connected component analyzer.
+ */
+(function (root, factory) {
+  const core = factory();
+  if (typeof module === 'object' && module.exports) module.exports = core;
+  else root.ABVisionCore = core;
+})(typeof globalThis !== 'undefined' ? globalThis : this, function () {
+  'use strict';
+
+  const MODES = ['dark', 'light', 'reference'];
+  const MAX_PIXELS = 2_000_000;
+  function integer(value, lo, hi, label) {
+    if (!Number.isInteger(value) || value < lo || value > hi)
+      throw new RangeError(label + ' debe estar entre ' + lo + ' y ' + hi);
+    return value;
+  }
+  function validateImage(image, label) {
+    if (!image || typeof image !== 'object') throw new TypeError(label + ' no es una imagen');
+    const width = integer(image.width, 1, 4096, 'Ancho'), height = integer(image.height, 1, 4096, 'Alto');
+    if (width * height > MAX_PIXELS) throw new RangeError('Imagen demasiado grande (máximo 2 millones de píxeles)');
+    if (!(image.data instanceof Uint8ClampedArray) || image.data.length !== width * height * 4)
+      throw new TypeError(label + ': datos RGBA inválidos');
+    return { width, height };
+  }
+  function clampRect(rect, width, height) {
+    if (!rect) return {x: 0, y: 0, width, height};
+    for (const key of ['x','y','width','height'])
+      if (!Number.isFinite(rect[key])) throw new TypeError('ROI inválida: '+key);
+    const x = Math.max(0, Math.min(width - 1, Math.floor(rect.x)));
+    const y = Math.max(0, Math.min(height - 1, Math.floor(rect.y)));
+    const endX = Math.max(x + 1, Math.min(width, Math.ceil(rect.x + rect.width)));
+    const endY = Math.max(y + 1, Math.min(height, Math.ceil(rect.y + rect.height)));
+    return {x, y, width: endX-x, height: endY-y};
+  }
+  function validateRecipe(recipe) {
+    if (!recipe || typeof recipe !== 'object') throw new TypeError('Configuración de inspección inválida');
+    const mode = recipe.mode;
+    if (!MODES.includes(mode)) throw new RangeError('Modo de inspección desconocido');
+    return {
+      mode,
+      threshold: integer(Number(recipe.threshold), 0, 255, 'Umbral'),
+      minArea: integer(Number(recipe.minArea), 1, 500000, 'Área mínima'),
+      maxDefects: integer(Number(recipe.maxDefects), 0, 10000, 'Máximo de defectos'),
+    };
+  }
+  function inspect(image, recipe, options = {}) {
+    const {width, height} = validateImage(image, 'Imagen de entrada');
+    const rule = validateRecipe(recipe), rect = clampRect(options.roi, width, height);
+    const ref = options.reference;
+    if (rule.mode === 'reference') {
+      const referenceDimensions = validateImage(ref, 'Imagen de referencia');
+      if (referenceDimensions.width !== width || referenceDimensions.height !== height)
+        throw new RangeError('La referencia debe tener las mismas dimensiones de imagen');
+    }
+    const total = width * height, mask = new Uint8Array(total), acceptedMask = new Uint8Array(total);
+    const data = image.data, refData = ref?.data, xLimit = rect.x + rect.width, yLimit = rect.y + rect.height;
+    let matchPixels = 0, luminanceSum = 0;
+    for (let y = rect.y; y < yLimit; y++) for (let x = rect.x; x < xLimit; x++) {
+      const i = y * width + x, p = i * 4;
+      const lum = (77 * data[p] + 150 * data[p + 1] + 29 * data[p + 2]) >> 8;
+      luminanceSum += lum;
+      const isCandidate = rule.mode === 'dark' ? lum < rule.threshold
+        : rule.mode === 'light' ? lum > rule.threshold
+        : Math.max(Math.abs(data[p] - refData[p]), Math.abs(data[p+1] - refData[p+1]), Math.abs(data[p+2] - refData[p+2])) > rule.threshold;
+      if (isCandidate) {mask[i] = 1; matchPixels++;}
+    }
+    // Four-connected deterministic flood fill; never uses external computer-vision packages.
+    const queue = new Uint32Array(rect.width * rect.height), components = [];
+    let defectPixels = 0, discarded = 0;
+    for (let y=rect.y; y<yLimit; y++) for (let x=rect.x; x<xLimit; x++) {
+      const first = y*width+x;
+      if (mask[first] !== 1) continue;
+      let front=0, back=1, minX=x, maxX=x, minY=y, maxY=y;
+      queue[0]=first;mask[first]=2;
+      while(front<back) {
+        const index=queue[front++], px=index%width, py=(index-px)/width;
+        if(px<minX)minX=px;if(px>maxX)maxX=px;
+        if(py<minY)minY=py;if(py>maxY)maxY=py;
+        const next=[px>rect.x?index-1:-1,px+1<xLimit?index+1:-1,py>rect.y?index-width:-1,py+1<yLimit?index+width:-1];
+        for(let j=0;j<4;j++) {const v=next[j];if(v>=0&&mask[v]===1){mask[v]=2;queue[back++]=v;}}
+      }
+      if(back<rule.minArea){discarded++;continue;}
+      defectPixels+=back;
+      for(let k=0;k<back;k++) acceptedMask[queue[k]]=1;
+      components.push({x:minX,y:minY,width:maxX-minX+1,height:maxY-minY+1,area:back,
+        centerX:Math.round((maxX+minX)/2),centerY:Math.round((maxY+minY)/2)});
+    }
+    components.sort((a,b)=>b.area-a.area||a.y-b.y||a.x-b.x);
+    return {
+      verdict: components.length<=rule.maxDefects?'OK':'NOK',
+      width,height,roi:rect,mode:rule.mode,threshold:rule.threshold,minArea:rule.minArea,
+      maxDefects:rule.maxDefects,defectCount:components.length,defectPixels,
+      candidatePixels:matchPixels,discardedComponents:discarded,
+      coveragePercent:Number((100*defectPixels/(rect.width*rect.height)).toFixed(3)),
+      meanLuminance:Number((luminanceSum/(rect.width*rect.height)).toFixed(2)),
+      boxes:components,mask:acceptedMask,
+    };
+  }
+
+  // Per-frame audit of two physical color fiducials on the piece's measurement plane.
+  // This checks scale/translation/rotation, not lens distortion or Z pose. It is fail-closed.
+  const FIDUCIAL_COLORS = ['cyan', 'magenta'];
+  function isFiducialPixel(data, offset, color) {
+    const r=data[offset],g=data[offset+1],b=data[offset+2];
+    return color==='cyan' ? r<95 && g>160 && b>120 && g>r*1.8 && b>r*1.5
+      : r>160 && b>130 && g<115 && r>g*1.8 && b>g*1.7;
+  }
+  function locateFiducial(image, point, color, radius=20) {
+    const {width,height}=validateImage(image,'Fotograma');
+    if(!point||!Number.isFinite(point.x)||!Number.isFinite(point.y))return null;
+    if(!FIDUCIAL_COLORS.includes(color))return null;
+    const rr=Math.round(Math.min(40,Math.max(8,radius)));
+    let total=0,sx=0,sy=0,minX=width,maxX=-1,minY=height,maxY=-1;
+    for(let y=Math.max(0,Math.floor(point.y)-rr);y<=Math.min(height-1,Math.ceil(point.y)+rr);y++) {
+      for(let x=Math.max(0,Math.floor(point.x)-rr);x<=Math.min(width-1,Math.ceil(point.x)+rr);x++) {
+        if((x-point.x)**2+(y-point.y)**2>rr*rr)continue;
+        if(isFiducialPixel(image.data,(y*width+x)*4,color)) {
+          total++;sx+=x;sy+=y;
+          if(x<minX)minX=x;if(x>maxX)maxX=x;if(y<minY)minY=y;if(y>maxY)maxY=y;
+        }
+      }
+    }
+    // Reject colored isolated noise and elongated streaks.
+    if(total<15||maxX-minX<3||maxY-minY<3)return null;
+    const ratio=(maxX-minX+1)/(maxY-minY+1);
+    if(ratio<.5||ratio>2)return null;
+    return {x:sx/total,y:sy/total,pixels:total,width:maxX-minX+1,height:maxY-minY+1};
+  }
+  function createAuditedCalibration(image, selections, referenceMm, distanceMm, sourceId) {
+    const {width,height}=validateImage(image,'Fotograma de calibración');
+    if(!Array.isArray(selections)||selections.length!==2)throw new RangeError('Marca dos referencias físicas');
+    if(typeof sourceId!=='string'||!sourceId||sourceId.length>512)
+      throw new RangeError('Identificación de cámara ausente');
+    if(!Number.isFinite(referenceMm)||referenceMm<=0||!Number.isFinite(distanceMm)||distanceMm<=0)
+      throw new RangeError('Patrón y distancia deben ser positivos');
+    const markers=selections.map((selection,i)=>locateFiducial(image,selection,FIDUCIAL_COLORS[i],20));
+    if(markers.some(x=>!x))throw new RangeError('No se detectan ambas marcas: primero cian, después magenta, 2 colores distintos y visibles');
+    const referencePixels=Math.hypot(markers[0].x-markers[1].x,markers[0].y-markers[1].y);
+    if(referencePixels<100)throw new RangeError('Separa las referencias al menos 100 píxeles para limitar la incertidumbre');
+    const calibration={schema:3,auditRequired:true,referenceMm,referencePixels,
+      workingDistanceMm:distanceMm,imageWidth:width,imageHeight:height,sourceId,
+      markers:markers.map(({x,y,pixels},i)=>({x,y,pixels,color:FIDUCIAL_COLORS[i]})),
+      mmPerPixel:referenceMm/referencePixels};
+    return Object.freeze(calibration);
+  }
+  function auditCameraFrame(image, calibration, sourceId, options={}) {
+    const {width,height}=validateImage(image,'Fotograma de auditoría');
+    const invalid=reason=>({status:'INVALID',reason,uncertaintyMm:null,mmPerPixel:null});
+    if(!calibration||!calibration.auditRequired||!Array.isArray(calibration.markers)||calibration.markers.length!==2)
+      return invalid('Falta calibración auditable con dos fiduciales');
+    if(calibration.sourceId!==sourceId)return invalid('La identidad/configuración de cámara cambió');
+    if(calibration.imageWidth!==width||calibration.imageHeight!==height)
+      return invalid('Resolución de captura cambiada');
+    let baseline;
+    try {baseline=validateCalibration(calibration,width,height);}catch(error){return invalid(error.message);}
+    const maxShift=options.maxShiftPx??12, maxScaleDrift=options.maxScaleDrift??.005,
+      maxRotationDegrees=options.maxRotationDegrees??2;
+    if(!Number.isFinite(maxShift)||maxShift<=0||maxShift>40||
+       !Number.isFinite(maxScaleDrift)||maxScaleDrift<=0||maxScaleDrift>.05)
+      return invalid('Parámetros de auditoría inválidos');
+    const markers=calibration.markers.map(m=>locateFiducial(image,m,m.color,Math.max(18,maxShift+8)));
+    if(markers.some(m=>!m))return invalid('No se ven las dos marcas físicas de control en este fotograma');
+    for(let i=0;i<2;i++) {
+      const pos=Math.hypot(markers[i].x-calibration.markers[i].x,markers[i].y-calibration.markers[i].y);
+      if(pos>maxShift)return invalid('Marcadores desplazados: cámara/patrón/pieza posiblemente movidos');
+      const baselineCount=calibration.markers[i].pixels;
+      if(markers[i].pixels<baselineCount*.5||markers[i].pixels>baselineCount*1.7)
+        return invalid('Tamaño/apariencia del marcador alterados: revisa enfoque, distancia e iluminación');
+    }
+    const dx=markers[1].x-markers[0].x,dy=markers[1].y-markers[0].y;
+    const observed=Math.hypot(dx,dy);
+    const drift=Math.abs(observed-calibration.referencePixels)/calibration.referencePixels;
+    if(drift>maxScaleDrift)return invalid('Escala física fuera de tolerancia: deriva '+(drift*100).toFixed(3)+' %');
+    const previousAngle=Math.atan2(calibration.markers[1].y-calibration.markers[0].y,
+                                  calibration.markers[1].x-calibration.markers[0].x);
+    const rotation=Math.atan2(Math.sin(Math.atan2(dy,dx)-previousAngle),
+                              Math.cos(Math.atan2(dy,dx)-previousAngle))*180/Math.PI;
+    if(Math.abs(rotation)>maxRotationDegrees)return invalid('Rotación relativa del patrón fuera de límite');
+    const mmPerPixel=calibration.referenceMm/observed;
+    // Conservative two-edge quantization + marker centroid detection uncertainty.
+    const uncertaintyMm=3*mmPerPixel;
+    return {status:'VERIFIED',reason:'Marcas presentes, escala y configuración de fuente verificadas',
+      referencePixels:observed,scaleDriftPercent:drift*100,rotationDegrees:rotation,
+      mmPerPixel,uncertaintyMm,markers};
+  }
+
+  // Calibrated metrology uses an independent reference of known physical length.
+  // Distance alone is insufficient: focal length, resolution and lens distortion matter.
+  function validateCalibration(calibration, width, height) {
+    if (!calibration || typeof calibration !== 'object') throw new TypeError('Calibración inexistente');
+    const {referenceMm, referencePixels, workingDistanceMm, imageWidth, imageHeight} = calibration;
+    if (![referenceMm, referencePixels, workingDistanceMm].every(n => typeof n === 'number' && Number.isFinite(n) && n > 0))
+      throw new RangeError('Referencia, píxeles y distancia deben ser positivos');
+    if (referenceMm > 100000 || referencePixels > 10000 || workingDistanceMm > 100000)
+      throw new RangeError('Valor fuera de rango');
+    if (imageWidth !== width || imageHeight !== height)
+      throw new RangeError('Resolución cambiada: recalibra la cámara');
+    return {mmPerPixel:referenceMm/referencePixels, workingDistanceMm};
+  }
+  function measurePiece(image, settings = {}) {
+    const {width,height} = validateImage(image,'Imagen de medición');
+    const threshold=integer(Number(settings.threshold ?? 130),0,255,'Umbral de pieza');
+    const minPixels=integer(Number(settings.minPixels ?? 100),1,2_000_000,'Área mínima de pieza');
+    const labels=new Uint8Array(width*height),queue=new Uint32Array(width*height);
+    const pixels=image.data;
+    for(let i=0;i<width*height;i++){
+      const p=i*4;
+      const l=(77*pixels[p]+150*pixels[p+1]+29*pixels[p+2])>>8;
+      labels[i]=l>=threshold?1:0;
+    }
+    let best=null;
+    for(let y=0;y<height;y++)for(let x=0;x<width;x++){
+      const first=y*width+x;
+      if(labels[first]!==1)continue;
+      let front=0,back=1,minX=x,minY=y,maxX=x,maxY=y;
+      queue[0]=first;labels[first]=2;
+      while(front<back){
+        const n=queue[front++],px=n%width,py=(n-px)/width;
+        if(px<minX)minX=px;if(px>maxX)maxX=px;
+        if(py<minY)minY=py;if(py>maxY)maxY=py;
+        const left=px>0?n-1:-1,right=px<width-1?n+1:-1,up=py>0?n-width:-1,down=py<height-1?n+width:-1;
+        for(const candidate of [left,right,up,down]) if(candidate>=0&&labels[candidate]===1){labels[candidate]=2;queue[back++]=candidate;}
+      }
+      if(back>=minPixels&&(!best||back>best.area))
+        best={x:minX,y:minY,width:maxX-minX+1,height:maxY-minY+1,area:back,
+              touchesBorder:minX===0||minY===0||maxX===width-1||maxY===height-1};
+    }
+    return best;
+  }
+  function evaluateMeasurement(box, calibration, nominal, width, height, audit=null) {
+    const scale=validateCalibration(calibration,width,height);
+    if(calibration.auditRequired && (!audit||audit.status!=='VERIFIED'))
+      return {status:'INVALID', reason:audit?.reason||'Auditoría de cámara ausente'};
+    if(!box) return {status:'NO_PIECE', reason:'No se ha encontrado una pieza segmentable'};
+    if(box.touchesBorder) return {status:'INVALID',reason:'La pieza toca el borde de la imagen; encuadra completamente'};
+    const keys=['widthMm','heightMm','toleranceMm','currentDistanceMm'];
+    if(!nominal||keys.some(k=>typeof nominal[k]!=='number'||!Number.isFinite(nominal[k])||nominal[k]<0))
+      throw new RangeError('Dimensiones y tolerancias no válidas');
+    if(nominal.widthMm<=0||nominal.heightMm<=0||nominal.currentDistanceMm<=0||nominal.toleranceMm>10000)
+      throw new RangeError('Las dimensiones y distancia deben ser positivas');
+    if(Math.abs(nominal.currentDistanceMm-scale.workingDistanceMm)>Math.max(1,scale.workingDistanceMm*.01))
+      return {status:'INVALID',reason:'La distancia respecto a la calibración varió más del 1 % o de 1 mm'};
+    const mmPerPixel=audit?.status==='VERIFIED'?audit.mmPerPixel:scale.mmPerPixel;
+    const measuredWidthMm=box.width*mmPerPixel;
+    const measuredHeightMm=box.height*mmPerPixel;
+    const deviationWidthMm=measuredWidthMm-nominal.widthMm;
+    const deviationHeightMm=measuredHeightMm-nominal.heightMm;
+    const deviation=Math.max(Math.abs(deviationWidthMm),Math.abs(deviationHeightMm));
+    const uncertaintyMm=audit?.status==='VERIFIED'?audit.uncertaintyMm:0;
+    const status=deviation+uncertaintyMm<=nominal.toleranceMm?'OK':
+      deviation-uncertaintyMm>nominal.toleranceMm?'NOK':'INDETERMINADO';
+    return {status,measuredWidthMm,measuredHeightMm,deviationWidthMm,deviationHeightMm,
+      mmPerPixel,uncertaintyMm,areaMm2:box.area*mmPerPixel**2,
+      reason:status==='INDETERMINADO'?'Incertidumbre próxima a la tolerancia; revisión manual requerida':null};
+  }
+  return Object.freeze({inspect,validateRecipe,clampRect,MAX_PIXELS,
+    validateCalibration,measurePiece,evaluateMeasurement,locateFiducial,
+    createAuditedCalibration,auditCameraFrame});
+});
+
+/* SPDX-License-Identifier: MIT
+ * Copyright (c) 2026 MS ROBOTIKA
+ * Browser-only acquisition, reporting, visualization and configuration.
+ */
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const core = window.ABVisionCore;
+const source = $('source'), view = $('overlay');
+const sctx = source.getContext('2d', {willReadFrequently:true}), vctx = view.getContext('2d');
+const viewer = document.querySelector('.viewer');
+let imageReady = false, reference = null, camera = null, stream = null, autoTimer = null;
+let lastAnalysis = null, lastSource = '', selection = null, roi = null;
+let entries = [], autoBusy = false, cameraDevices = [];
+let ipActive=false, ipFetchBusy=false, ipAbort=null, calibration=null, marking=false, markPoints=[];
+let nativeIpSize='', lastAudit=null;
+let sessionToken=new URLSearchParams(location.hash.slice(1)).get('token') || '';
+try{if(!sessionToken)sessionToken=sessionStorage.getItem('ab-vision-session')||'';
+  if(sessionToken)sessionStorage.setItem('ab-vision-session',sessionToken);}catch{}
+if(location.hash.includes('token='))history.replaceState(null,'',location.pathname);
+const MAX_HISTORY=500;
+
+function info(message, error=false) {
+  $('message').textContent = String(message);
+  $('message').classList.toggle('error', error);
+}
+function setFeed(message, active=false) {
+  $('feed-status').textContent = message;
+  $('feed-status').classList.toggle('ready', active);
+}
+function formatNumber(n) {return Number(n).toLocaleString('es-ES');}
+function updateSizes(width,height) {
+  if(calibration&&(calibration.imageWidth!==width||calibration.imageHeight!==height))invalidateCalibration('Resolución modificada; recalibra');
+  source.width=view.width=width;
+  source.height=view.height=height;
+  viewer.style.aspectRatio=`${width} / ${height}`;
+  $('image-size').textContent=`${width} × ${height}`;
+  roi=null;
+  $('roi-label').textContent='Imagen completa';
+  if(reference&&(reference.width!==width||reference.height!==height)) {
+    reference=null; $('reference-label').textContent='Referencias de distinto tamaño descartadas';
+  }
+}
+function getFrame() {return sctx.getImageData(0,0,source.width,source.height);}
+function renderPicture(result=null) {
+  vctx.clearRect(0,0,view.width,view.height);
+  vctx.drawImage(source,0,0);
+  if(result){
+    // Mask overlay is tied to the accepted connected components, not threshold-only pixels.
+    const mask=result.mask,overlay=vctx.createImageData(view.width,view.height);
+    for(let i=0;i<mask.length;i++) if(mask[i]){
+      const p=i*4;overlay.data[p]=255;overlay.data[p+1]=66;overlay.data[p+2]=85;overlay.data[p+3]=115;
+    }
+    const temp=document.createElement('canvas');temp.width=view.width;temp.height=view.height;
+    temp.getContext('2d').putImageData(overlay,0,0);vctx.drawImage(temp,0,0);
+    vctx.strokeStyle='#ff6f87';vctx.lineWidth=Math.max(2,view.width/500);
+    vctx.font=`bold ${Math.max(15,Math.round(view.width/80))}px system-ui`;
+    result.boxes.slice(0,250).forEach((box,index)=>{
+      vctx.strokeRect(box.x-.5,box.y-.5,box.width+1,box.height+1);
+      const name=`D${index+1} · ${box.area}px`;
+      const labelWidth=Math.ceil(vctx.measureText(name).width)+12;
+      const lx=box.x,ly=Math.max(0,box.y-22);
+      vctx.fillStyle='#ff687e';vctx.fillRect(lx,ly,labelWidth,22);
+      vctx.fillStyle='#101921';vctx.fillText(name,lx+6,ly+16);
+      vctx.fillStyle='#ff687e';
+    });
+  }
+  if(lastAnalysis?.pieceBox){
+    const b=lastAnalysis.pieceBox;
+    vctx.save();vctx.strokeStyle='#22f0bc';vctx.lineWidth=Math.max(2,view.width/500);
+    vctx.strokeRect(b.x,b.y,b.width,b.height);vctx.restore();
+  }
+  if(markPoints.length){vctx.save();vctx.strokeStyle='#25fbd5';vctx.fillStyle='#25fbd5';vctx.lineWidth=3;
+    for(const pt of markPoints){vctx.beginPath();vctx.arc(pt.x,pt.y,Math.max(5,view.width/170),0,2*Math.PI);vctx.fill();}
+    if(markPoints.length===2){vctx.beginPath();vctx.moveTo(markPoints[0].x,markPoints[0].y);vctx.lineTo(markPoints[1].x,markPoints[1].y);vctx.stroke();}
+    vctx.restore();}
+  const selected=selection||roi;
+  if(selected){
+    vctx.save();vctx.strokeStyle='#40ffd1';vctx.lineWidth=Math.max(2,view.width/600);
+    vctx.setLineDash([10,8]);vctx.strokeRect(selected.x,selected.y,selected.width,selected.height);
+    vctx.restore();
+  }
+}
+function createDemo() {
+  stopAuto();stopCamera();stopIp();invalidateCalibration('Cambio de fuente: recalibra');
+  const width=1280,height=720;updateSizes(width,height);
+  const bg=sctx.createLinearGradient(0,0,width,height);bg.addColorStop(0,'#3a5561');bg.addColorStop(1,'#132d3c');
+  sctx.fillStyle=bg;sctx.fillRect(0,0,width,height);
+  sctx.fillStyle='#253d4b';for(let x=50;x<1280;x+=100){sctx.fillRect(x,0,1,height)}
+  sctx.save();sctx.shadowColor='#070d16';sctx.shadowBlur=35;sctx.shadowOffsetY=20;
+  sctx.fillStyle='#d7e0da';sctx.fillRect(105,98,1070,515);sctx.restore();
+  const metal=sctx.createLinearGradient(110,100,1140,620);metal.addColorStop(0,'#f0f2e9');metal.addColorStop(.5,'#c6d4d3');metal.addColorStop(1,'#e4ebe3');
+  sctx.fillStyle=metal;sctx.fillRect(125,115,1030,480);
+  sctx.strokeStyle='#a1b6b6';sctx.lineWidth=3;sctx.strokeRect(145,135,990,440);
+  sctx.globalAlpha=.18;sctx.strokeStyle='#effffa';sctx.lineWidth=2;
+  for(let i=0;i<14;i++){sctx.beginPath();sctx.moveTo(140,162+i*29);sctx.lineTo(1140,151+i*29);sctx.stroke()}sctx.globalAlpha=1;
+  // Four deterministic high-contrast surface defects to validate segmentation.
+  const marks=[{x:365,y:265,rx:42,ry:18,r:.35},{x:700,y:365,rx:27,ry:43,r:.7},{x:935,y:248,rx:18,ry:26,r:-.18},{x:535,y:490,rx:50,ry:13,r:.2}];
+  for(const m of marks){sctx.save();sctx.translate(m.x,m.y);sctx.rotate(m.r);
+    sctx.fillStyle='#303b3b';sctx.beginPath();sctx.ellipse(0,0,m.rx,m.ry,0,0,2*Math.PI);sctx.fill();
+    sctx.fillStyle='#45504e';sctx.beginPath();sctx.ellipse(-m.rx*.15,-m.ry*.2,m.rx*.6,m.ry*.55,0,0,2*Math.PI);sctx.fill();sctx.restore();}
+  // Test-only physical reference illustration: first cyan, second magenta.
+  // For real cameras, PRINT or place equivalent fiducials on the same plane.
+  for(const [x,y,color] of [[160,667,'#13eddf'],[1120,667,'#f725ca']]){
+    sctx.fillStyle=color;sctx.beginPath();sctx.arc(x,y,9,0,2*Math.PI);sctx.fill();
+  }
+  roi={x:155,y:145,width:960,height:420};
+  $('roi-label').textContent='ROI demo · 960 × 420';
+  imageReady=true;lastSource='demo';lastAnalysis=null;
+  $('source-label').textContent='Muestra técnica sintética · chapa con defectos';
+  setFeed('● IMAGEN CARGADA',true);renderPicture();
+  info('Imagen demo lista. Pulsa «Analizar imagen» o activa la inspección continua.');
+}
+async function openImage(file) {
+  if(!file)return;
+  if(file.size>20*1024*1024){info('Archivo demasiado grande (límite 20 MB).',true);return;}
+  if(!['image/png','image/jpeg','image/webp','image/bmp'].includes(file.type)){info('Formato no admitido.',true);return;}
+  stopAuto();stopCamera();stopIp();invalidateCalibration('Nueva imagen: recalibra');
+  const url=URL.createObjectURL(file);
+  try{
+    const pic=await createImageBitmap(file);
+    const scale=Math.min(1,Math.sqrt(1_900_000/(pic.width*pic.height)),1600/pic.width,1200/pic.height);
+    const width=Math.max(1,Math.round(pic.width*scale)),height=Math.max(1,Math.round(pic.height*scale));
+    updateSizes(width,height);sctx.clearRect(0,0,width,height);sctx.drawImage(pic,0,0,width,height);pic.close();
+    imageReady=true;lastSource=file.name.slice(0,120);lastAnalysis=null;
+    $('source-label').textContent='ARCHIVO · '+lastSource;
+    setFeed('● IMAGEN CARGADA',true);renderPicture();
+    info('Imagen cargada localmente. Haz una selección ROI si necesitas limitar el área.');
+  }catch(err){info('No se pudo decodificar la imagen: '+err.message,true)}
+  finally{URL.revokeObjectURL(url);$('image-file').value='';}
+}
+function captureFrame() {
+  if(!stream||!camera||camera.readyState<2){invalidateCalibration('Cámara USB sin fotograma actual');info('La cámara no ha entregado un fotograma válido.',true);stopAuto();return false;}
+  const width=camera.videoWidth,height=camera.videoHeight;
+  if(!width||!height)return false;
+  const scale=Math.min(1,Math.sqrt(1_900_000/(width*height)),1600/width,1200/height);
+  const w=Math.max(1,Math.round(width*scale)),h=Math.max(1,Math.round(height*scale));
+  if(source.width!==w||source.height!==h)updateSizes(w,h);
+  sctx.drawImage(camera,0,0,w,h);
+  imageReady=true;lastAnalysis=null;lastSource='webcam';$('source-label').textContent='CÁMARA · CAPTURA LOCAL';
+  setFeed('● CÁMARA ACTIVA',true);renderPicture();return true;
+}
+async function startCamera() {
+  if(!navigator.mediaDevices?.getUserMedia){info('La cámara requiere HTTPS o localhost y un navegador compatible.',true);return;}
+  stopAuto();stopCamera();stopIp();invalidateCalibration('Cambio de cámara: recalibra');
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:1280},height:{ideal:720},facingMode:'environment'},audio:false});
+    camera=$('camera-video');camera.srcObject=stream;await camera.play();
+    $('camera-start').disabled=true;$('camera-stop').disabled=false;$('capture').disabled=false;
+    captureFrame();info('Cámara activa. Captura imagen para analizar o utiliza inspección continua.');
+  }catch(err){stopCamera();info('No se pudo abrir la cámara: '+err.message,true);}
+}
+function stopCamera() {
+  if(stream){stream.getTracks().forEach(track=>track.stop());stream=null;}
+  if(camera){camera.pause();camera.srcObject=null;camera=null;}
+  $('camera-start').disabled=false;$('camera-stop').disabled=true;$('capture').disabled=true;
+  if(imageReady)setFeed('● IMAGEN CARGADA',true);else setFeed('● SIN FUENTE');
+}
+function recipe() {
+  return core.validateRecipe({mode:$('mode').value,threshold:Number($('threshold').value),
+    minArea:Number($('min-area').value),maxDefects:Number($('max-defects').value)});
+}
+function buildHistoryRow(entry) {
+  const row=document.createElement('tr');
+  const vals=[new Date(entry.time).toLocaleString('es-ES'),entry.lot,entry.mode,entry.defects,
+    entry.coverage+'%',entry.verdict,entry.measuredWidthMm==null?'—':entry.measuredWidthMm.toFixed(2)+' × '+entry.measuredHeightMm.toFixed(2),entry.duration+' ms'];
+  vals.forEach((v,i)=>{const cell=document.createElement('td');cell.textContent=String(v);
+    if(i===5)cell.className=entry.verdict==='OK'?'good':'bad';row.append(cell);});return row;
+}
+function renderHistory() {
+  $('history-rows').replaceChildren();
+  if(!entries.length){const row=document.createElement('tr'),cell=document.createElement('td');cell.colSpan=8;cell.className='empty';cell.textContent='Los análisis realizados durante esta sesión aparecerán aquí.';row.append(cell);$('history-rows').append(row);return;}
+  const frag=document.createDocumentFragment();entries.slice().reverse().forEach(item=>frag.append(buildHistoryRow(item)));
+  $('history-rows').append(frag);
+}
+function inspectOnce() {
+  if(!imageReady){info('Primero carga una imagen o captura de cámara.',true);return null;}
+  try {
+    const start=performance.now();
+    const result=core.inspect(getFrame(),recipe(),{roi,reference});
+    const ms=(performance.now()-start).toFixed(1);
+    let dimensional=null,finalVerdict=result.verdict,box=null;
+    const live=Boolean(stream||ipActive);
+    let audit=null;
+    if(calibration){
+      audit=core.auditCameraFrame(getFrame(),calibration,sourceIdentity());
+      lastAudit=audit;
+      if(audit.status==='VERIFIED'){
+        showAudit('VERIFICADA','Escala '+audit.scaleDriftPercent.toFixed(3)+' % · giro '+audit.rotationDegrees.toFixed(2)+'° · margen mínimo de discretización ±'+audit.uncertaintyMm.toFixed(3)+' mm');
+        box=core.measurePiece(getFrame(),{threshold:Number($('piece-threshold').value),minPixels:100});
+        dimensional=core.evaluateMeasurement(box,calibration,{
+          widthMm:Number($('nominal-width').value),heightMm:Number($('nominal-height').value),
+          toleranceMm:Number($('dimension-tolerance').value),currentDistanceMm:Number($('distance-mm').value)},
+          result.width,result.height,audit);
+      }else{
+        dimensional={status:'INVALID',reason:audit.reason};
+        showAudit('NO VALIDADA',audit.reason);
+      }
+      if(dimensional.status==='NOK')finalVerdict='NOK';
+      else if(dimensional.status==='INDETERMINADO')finalVerdict='REVISAR';
+      else if(dimensional.status!=='OK')finalVerdict='SIN MEDICIÓN';
+    }else if(live){
+      finalVerdict='SIN MEDICIÓN';
+      showAudit('NO VALIDADA','Cámara sin patrón auditable; clasificación dimensional bloqueada');
+    }else showAudit('NO VALIDADA','Solo inspección visual experimental sin verificación dimensional');
+    result.pieceBox=box;
+    lastAnalysis=result;
+    const dims=dimensional?.measuredWidthMm!=null;
+    $('measured-size').textContent=dims?
+      dimensional.measuredWidthMm.toFixed(2)+' × '+dimensional.measuredHeightMm.toFixed(2):
+      dimensional?.status==='INVALID'?'INVÁLIDA':'SIN CALIBRAR';
+    $('dimension-status').textContent=dimensional?.reason|| (dims?'Ancho '+dimensional.deviationWidthMm.toFixed(2)+' mm · Alto '+dimensional.deviationHeightMm.toFixed(2)+' mm · '+dimensional.status:'Dimensiones aún sin verificar');
+    $('verdict').textContent=finalVerdict;
+    $('verdict').className=finalVerdict==='OK'?'ok':finalVerdict==='NOK'?'nok':'pending';
+    $('defects').textContent=formatNumber(result.defectCount);
+    $('coverage').textContent=result.coveragePercent.toLocaleString('es-ES')+'%';
+    $('duration').textContent=ms+' ms · '+result.width+' × '+result.height;
+    renderPicture(result);
+    const row={time:new Date().toISOString(),lot:$('lot').value.trim()||'SIN-LOTE',source:lastSource,
+      mode:result.mode,roi:result.roi,threshold:result.threshold,minArea:result.minArea,
+      maxDefects:result.maxDefects,defects:result.defectCount,coverage:result.coveragePercent,
+      verdict:finalVerdict,visualVerdict:result.verdict,dimensionStatus:dimensional?.status||'UNCALIBRATED',
+      auditStatus:audit?.status||'NO_CALIBRATION',auditReason:audit?.reason||'No calibrada',
+      auditScaleDriftPercent:audit?.scaleDriftPercent??null,auditRotationDegrees:audit?.rotationDegrees??null,
+      auditUncertaintyMm:audit?.uncertaintyMm??null,sourceIdentity:sourceIdentity(),
+      measuredWidthMm:dims?dimensional.measuredWidthMm:null,measuredHeightMm:dims?dimensional.measuredHeightMm:null,
+      nominalWidthMm:Number($('nominal-width').value),nominalHeightMm:Number($('nominal-height').value),
+      toleranceMm:Number($('dimension-tolerance').value),workingDistanceMm:Number($('distance-mm').value),
+      mmPerPixel:audit?.mmPerPixel??null,duration:Number(ms),boxes:result.boxes.map(({x,y,width,height,area})=>({x,y,width,height,area}))};
+    entries.push(row);if(entries.length>MAX_HISTORY)entries.shift();
+    $('count').textContent=formatNumber(entries.length);renderHistory();
+    info(result.defectCount+' defecto(s). Resultado '+finalVerdict+(dimensional?' · metrología '+dimensional.status:' · medidas sin calibrar')+'.');
+    return result;
+  }catch(err){info('No se pudo inspeccionar: '+err.message,true);return null;}
+}
+function stopAuto(){clearTimeout(autoTimer);autoTimer=null;$('auto').textContent='⟳ Inspección continua: OFF';}
+async function autoCycle() {
+  if(!autoTimer||autoBusy)return;
+  autoBusy=true;
+  try{if(ipActive){if(await fetchIpFrame())inspectOnce();}else if(stream){if(captureFrame())inspectOnce();}else{stopAuto();info('Inspección continua requiere cámara activa; no se repite una foto estática.',true);}}
+  finally{autoBusy=false;}
+  if(autoTimer)autoTimer=setTimeout(autoCycle,1500);
+}
+function toggleAuto(){if(autoTimer){stopAuto();info('Inspección continua detenida.');return;}
+  if(!imageReady||(!stream&&!ipActive)){info('Inspección continua requiere cámara USB o IP activa, no imagen estática.',true);return;}
+  autoTimer=setTimeout(autoCycle,50);$('auto').textContent='■ Inspección continua: ON';
+  info('Inspección continua activa: aproximadamente una imagen cada 1,5 s; se detiene al ocultar la pestaña.');
+}
+function pointInCanvas(e){const r=view.getBoundingClientRect();return {
+  x:Math.max(0,Math.min(view.width-1,Math.round((e.clientX-r.left)*view.width/r.width))),
+  y:Math.max(0,Math.min(view.height-1,Math.round((e.clientY-r.top)*view.height/r.height)))};}
+function applyRecipe(settings) {
+  const valid=core.validateRecipe(settings);
+  $('mode').value=valid.mode;$('threshold').value=valid.threshold;$('min-area').value=valid.minArea;
+  $('max-defects').value=valid.maxDefects;updateSliders();
+}
+function updateSliders() {
+  $('threshold-value').value=$('threshold').value;
+  $('min-area-value').value=$('min-area').value;
+  $('threshold-hint').textContent=$('mode').value==='dark'?'Detecta luminosidad inferior al umbral.':
+    $('mode').value==='light'?'Detecta luminosidad superior al umbral.':'Detecta diferencia RGB máxima respecto a la referencia.';
+}
+function storeRecipe() {
+  try{localStorage.setItem('ab-vision-recipe-v2',JSON.stringify({schema:2,recipe:recipe(),metrology:metrologySettings()}));info('Receta guardada en este navegador. Las imágenes NO se almacenan.');}
+  catch(err){info('No se pudo guardar la receta: '+err.message,true);}
+}
+function download(filename,content,type) {
+  const blob=content instanceof Blob?content:new Blob([content],{type});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename;
+  document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);
+}
+function csvValue(value){let s=String(value??'');if(/^[\s]*[=+@\-]/.test(s)&&!/^\s*-?\d+(\.\d+)?\s*$/.test(s))s="'"+s;return '"'+s.replaceAll('"','""')+'"';}
+function exportCsv() {
+  if(!entries.length){info('Todavía no hay inspecciones que exportar.',true);return;}
+  const columns=['time','lot','source','sourceIdentity','mode','defects','coverage','verdict','visualVerdict','dimensionStatus','auditStatus','auditReason','auditScaleDriftPercent','auditRotationDegrees','auditUncertaintyMm',
+    'measuredWidthMm','measuredHeightMm','nominalWidthMm','nominalHeightMm','toleranceMm','workingDistanceMm',
+    'mmPerPixel','duration','threshold','minArea','maxDefects'];
+  const lines=[columns.map(csvValue).join(',')];
+  entries.forEach(e=>lines.push(columns.map(k=>csvValue(e[k])).join(',')));
+  download('AB-Vision-historial.csv','\uFEFF'+lines.join('\r\n')+'\r\n','text/csv;charset=utf-8');
+  info('Histórico exportado a CSV.');
+}
+function exportAnnotated() {
+  if(!imageReady){info('No hay imagen que exportar.',true);return;}
+  view.toBlob(blob=>{if(blob)download('AB-Vision-Inspeccion.png',blob,'image/png');else info('No se pudo guardar el PNG.',true);},'image/png');
+}
+function takeReference() {
+  if(!imageReady){info('Carga primero una imagen de referencia.',true);return;}
+  reference=getFrame();
+  $('reference-label').textContent=`Patrón ${reference.width}×${reference.height} · sesión actual`;
+  info('Referencia fijada en memoria. Usa «Diferencia frente a referencia» sobre una imagen posterior alineada.');
+}
+
+function metrologySettings(){return {
+  referenceMm:Number($('reference-mm').value),distanceMm:Number($('distance-mm').value),
+  nominalWidthMm:Number($('nominal-width').value),nominalHeightMm:Number($('nominal-height').value),
+  toleranceMm:Number($('dimension-tolerance').value),threshold:Number($('piece-threshold').value)};}
+function applyMetrology(cfg){
+  for(const [key,id] of [['referenceMm','reference-mm'],['distanceMm','distance-mm'],
+    ['nominalWidthMm','nominal-width'],['nominalHeightMm','nominal-height'],
+    ['toleranceMm','dimension-tolerance'],['threshold','piece-threshold']]){
+    if(Number.isFinite(cfg[key])&&cfg[key]>=0)$(id).value=cfg[key];
+  }
+}
+function invalidateCalibration(message='Sin calibrar'){
+  calibration=null;lastAudit=null;marking=false;markPoints=[];
+  $('calibration-status').textContent='SIN CALIBRAR · '+message;
+  $('measured-size').textContent='SIN CALIBRAR';$('dimension-status').textContent='Medidas dimensionales no verificadas';
+  if(['OK','NOK','REVISAR'].includes($('verdict').textContent)){$('verdict').textContent='SIN MEDICIÓN';$('verdict').className='pending';}
+  showAudit('NO VALIDADA',message);
+  if(imageReady)renderPicture(lastAnalysis);
+}
+function sourceIdentity(){
+  if(ipActive) return 'ip:'+[$('ip-protocol').value,$('ip-address').value.trim(),$('ip-port').value,
+    $('ip-path').value.trim(),nativeIpSize].join('|');
+  if(stream){const t=stream.getVideoTracks()[0],m=t?.getSettings?.()||{};
+    return 'webcam:'+JSON.stringify({deviceId:m.deviceId||'',width:m.width||0,height:m.height||0,
+      zoom:m.zoom??null,focusDistance:m.focusDistance??null,resizeMode:m.resizeMode??null});}
+  return 'static:'+lastSource;
+}
+function showAudit(status,message){
+  const e=$('audit-status');e.textContent=status+' · '+message;
+  e.className='audit-indicator '+(status==='VERIFICADA'?'audit-good':'audit-bad');
+}
+function calibrationClick(point){
+  markPoints.push(point);
+  if(markPoints.length!==2){info('Primera marca registrada (cian). Marca ahora el centro MAGENTA.',false);renderPicture(lastAnalysis);return;}
+  marking=false;
+  const referenceMm=Number($('reference-mm').value),workingDistanceMm=Number($('distance-mm').value);
+  try{
+    calibration=core.createAuditedCalibration(getFrame(),markPoints,referenceMm,workingDistanceMm,sourceIdentity());
+    const audit=core.auditCameraFrame(getFrame(),calibration,sourceIdentity());
+    if(audit.status!=='VERIFIED')throw Error(audit.reason);
+    lastAudit=audit;
+    $('calibration-status').textContent='CALIBRADA Y AUDITADA · '+calibration.mmPerPixel.toFixed(5)+
+      ' mm/px · distancia nominal '+workingDistanceMm+' mm · '+source.width+'×'+source.height;
+    showAudit('VERIFICADA','Referencia cian/magenta visible. Deriva de escala 0,000 %');
+    info('Patrón detectado. Se volverán a verificar ambos marcadores EN CADA FOTOGRAMA.');
+  }catch(error){calibration=null;lastAudit=null;markPoints=[];showAudit('NO VALIDADA',error.message);info('Calibración rechazada: '+error.message,true);}
+  renderPicture(lastAnalysis);
+}
+function ipConfig(){return {ip:$('ip-address').value.trim(),protocol:$('ip-protocol').value,
+  port:Number($('ip-port').value),path:$('ip-path').value.trim(),username:$('ip-user').value,
+  password:$('ip-password').value,approved:$('ip-approved').checked};}
+async function fetchIpFrame(){
+  if(ipFetchBusy)return false;
+  if(!sessionToken){info('Cámara IP requiere servidor Python: ejecuta serve.py y abre su URL completa.',true);stopAuto();return false;}
+  ipFetchBusy=true;ipAbort=new AbortController();
+  try{
+    const response=await fetch('/api/ip-camera/frame',{method:'POST',cache:'no-store',signal:ipAbort.signal,
+      headers:{'Content-Type':'application/json','X-AB-Vision-Session':sessionToken},body:JSON.stringify(ipConfig())});
+    if(!response.ok)throw Error((await response.text()).slice(0,220));
+    if(!response.headers.get('Content-Type')?.includes('image/jpeg'))throw Error('Fotograma no es JPEG');
+    const blob=await response.blob();if(blob.size>4*1024*1024)throw Error('Fotograma demasiado grande');
+    const bitmap=await createImageBitmap(blob);nativeIpSize=bitmap.width+'x'+bitmap.height;
+    const scale=Math.min(1,Math.sqrt(1_900_000/(bitmap.width*bitmap.height)),1600/bitmap.width,1200/bitmap.height);
+    const w=Math.max(1,Math.round(bitmap.width*scale)),h=Math.max(1,Math.round(bitmap.height*scale));
+    if(source.width!==w||source.height!==h)updateSizes(w,h);
+    sctx.drawImage(bitmap,0,0,w,h);bitmap.close();
+    imageReady=true;lastSource='IP '+$('ip-address').value.trim();lastAnalysis=null;
+    $('source-label').textContent='IP · '+$('ip-address').value.trim();
+    setFeed('● CÁMARA IP ACTIVA',true);$('ip-state').textContent='Fotograma recibido';renderPicture();
+    return true;
+  }catch(error){if(error.name!=='AbortError'){invalidateCalibration('Error de adquisición IP; medida retenida');info('IP: '+error.message,true);$('ip-state').textContent='Error de adquisición';stopAuto();ipActive=false;}$('ip-connect').disabled=false;return false;}
+  finally{ipFetchBusy=false;ipAbort=null;}
+}
+function stopIp(){ipActive=false;if(ipAbort)ipAbort.abort();$('ip-disconnect').disabled=true;$('ip-connect').disabled=false;
+  if($('ip-state'))$('ip-state').textContent='Cámara IP desconectada';}
+async function connectIp(){
+  stopAuto();stopCamera();stopIp();invalidateCalibration('Nueva fuente IP: calibra patrón en esta cámara');
+  if(!$('ip-approved').checked)return info('Debes autorizar expresamente el acceso a la cámara de tu red.',true);
+  const data=ipConfig();if(!/^\d{1,3}(\.\d{1,3}){3}$/.test(data.ip))return info('Introduce IPv4 numérica de cámara.',true);
+  if(!data.path.startsWith('/')||data.path.startsWith('//'))return info('La ruta debe empezar por /',true);
+  $('ip-connect').disabled=true;
+  const ok=await fetchIpFrame();ipActive=ok;
+  $('ip-disconnect').disabled=!ok;$('ip-connect').disabled=ok;
+  if(ok)info('Cámara IP conectada y primer JPEG captado. Calibra y activa inspección continua.');
+}
+
+function init() {
+  try{const saved=JSON.parse(localStorage.getItem('ab-vision-recipe-v2')||localStorage.getItem('ab-vision-recipe-v1')||'null');if(saved?.recipe)applyRecipe(saved.recipe);if(saved?.metrology)applyMetrology(saved.metrology);}catch{}
+  $('demo').addEventListener('click',createDemo);
+  $('image-file').addEventListener('change',e=>openImage(e.target.files?.[0]));
+  $('camera-start').addEventListener('click',startCamera);
+  $('camera-stop').addEventListener('click',()=>{stopAuto();stopCamera();invalidateCalibration('Cámara física desconectada');info('Cámara desconectada. La calibración se ha invalidado.');});
+  $('ip-connect').addEventListener('click',connectIp);$('ip-disconnect').addEventListener('click',()=>{stopAuto();stopIp();invalidateCalibration('Cámara IP desconectada');info('Cámara IP desconectada.');});
+  for(const id of ['ip-address','ip-port','ip-protocol','ip-path','ip-user','ip-password','ip-approved'])$(id).addEventListener('change',()=>{if(ipActive){stopAuto();stopIp();invalidateCalibration('Parámetros IP modificados; vuelve a calibrar');}});
+  $('capture').addEventListener('click',captureFrame);
+  $('analyze').addEventListener('click',inspectOnce);$('auto').addEventListener('click',toggleAuto);
+  for(const id of ['threshold','min-area','mode'])$(id).addEventListener('input',updateSliders);
+  $('roi-reset').addEventListener('click',()=>{roi=null;selection=null;$('roi-label').textContent='Imagen completa';renderPicture(lastAnalysis);});
+  view.addEventListener('pointerdown',e=>{if(marking&&imageReady){calibrationClick(pointInCanvas(e));return;}if(!$('roi-mode').checked||!imageReady)return;
+    const p=pointInCanvas(e);selection={startX:p.x,startY:p.y,x:p.x,y:p.y,width:1,height:1};view.setPointerCapture(e.pointerId);});
+  view.addEventListener('pointermove',e=>{if(!selection)return;const p=pointInCanvas(e);
+    selection.x=Math.min(selection.startX,p.x);selection.y=Math.min(selection.startY,p.y);
+    selection.width=Math.max(1,Math.abs(p.x-selection.startX));selection.height=Math.max(1,Math.abs(p.y-selection.startY));renderPicture(lastAnalysis);});
+  view.addEventListener('pointerup',e=>{if(!selection)return;const p=pointInCanvas(e),r=selection;
+    const next={x:Math.min(r.startX,p.x),y:Math.min(r.startY,p.y),width:Math.max(1,Math.abs(p.x-r.startX)),height:Math.max(1,Math.abs(p.y-r.startY))};
+    selection=null;roi=core.clampRect(next,view.width,view.height);
+    $('roi-label').textContent=`ROI: ${roi.x},${roi.y} · ${roi.width}×${roi.height}`;renderPicture(lastAnalysis);});
+  $('save-recipe').addEventListener('click',storeRecipe);
+  $('export-recipe').addEventListener('click',()=>download('AB-Vision-receta.json',JSON.stringify({schema:2,application:'AB-Vision Inspector',recipe:recipe(),metrology:metrologySettings(),calibration},null,2),'application/json'));
+  $('recipe-file').addEventListener('change',async e=>{const file=e.target.files?.[0];if(!file)return;
+    try{if(file.size>65536)throw Error('Archivo mayor de 64 KiB');const json=JSON.parse(await file.text());
+      if(![1,2].includes(json.schema)||!json.recipe)throw Error('Formato de receta incompatible');applyRecipe(json.recipe);if(json.metrology)applyMetrology(json.metrology);invalidateCalibration('Receta importada: verifica de nuevo la calibración sobre patrón');info('Receta importada; comprueba la calibración física antes de medir.');}
+    catch(err){info('No se pudo importar: '+err.message,true)}finally{e.target.value='';}});
+  $('set-reference').addEventListener('click',takeReference);
+  $('mark-scale').addEventListener('click',()=>{if(!imageReady)return info('Necesitas imagen para calibrar',true);markPoints=[];marking=true;$('roi-mode').checked=false;info('Coloca dos marcadores físicos de color en el mismo plano: pulsa primero CIAN y luego MAGENTA; su distancia debe ser la longitud real indicada.');});
+  $('clear-scale').addEventListener('click',()=>invalidateCalibration('Calibración borrada'));
+  for(const id of ['reference-mm','nominal-width','nominal-height','dimension-tolerance','distance-mm','piece-threshold'])$(id).addEventListener('change',()=>{if(['reference-mm','distance-mm','piece-threshold'].includes(id)&&calibration)invalidateCalibration('Parámetro crítico cambiado; recalibra');});
+  $('export-csv').addEventListener('click',exportCsv);
+  $('export-json').addEventListener('click',()=>download('AB-Vision-historial.json',JSON.stringify({schema:1,records:entries},null,2),'application/json'));
+  $('save-png').addEventListener('click',exportAnnotated);
+  $('clear-history').addEventListener('click',()=>{entries=[];$('count').textContent='0';renderHistory();info('Historial de esta sesión vaciado.');});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)stopAuto();});
+  window.addEventListener('pagehide',()=>{stopAuto();stopCamera();stopIp();});
+  updateSliders();createDemo();
+}
+init();
+})();
+
+</script></body></html>
