@@ -1,0 +1,2 @@
+# Solo herramientas opcionales para pruebas de interfaz; no son dependencias de ejecución.
+playwright>=1.55,<2
