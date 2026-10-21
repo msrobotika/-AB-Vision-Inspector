@@ -1,0 +1,47 @@
+name: AB-Vision Inspector · pruebas y capturas
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Preparar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Preparar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Revisar motor JS
+        run: |
+          node --check src/vision-core.js
+          node --check src/app.js
+          node --test tests/core.test.js
+      - name: Comprobar servidor cámaras IP
+        run: |
+          python -m py_compile serve.py
+          python -m unittest discover -s tests -p test_ip_camera.py -v
+      - name: Instalar navegador de pruebas
+        run: |
+          python -m pip install -r requirements-dev.txt
+          python -m playwright install --with-deps chromium
+      - name: Pruebas visuales reales de la aplicación
+        run: python -m unittest discover -s tests -p smoke_browser.py -v
+      - name: Exportar cuatro capturas verificadas
+        uses: actions/upload-artifact@v4
+        with:
+          name: AB-Vision-Inspector-capturas-reales
+          path: docs/screenshots/vision-*.png
+          if-no-files-found: error
