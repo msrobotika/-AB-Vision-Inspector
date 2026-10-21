@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="AB-Vision Inspector: inspección visual industrial abierta, local y gratuita. MS ROBOTIKA.">
+<title>AB-Vision Inspector — MS ROBOTIKA</title><link rel="icon" href="/favicon.svg"><link rel="stylesheet" href="src/style.css">
+</head>
+<body>
+<div class="shell">
+<aside class="side">
+  <div class="logo"><span class="logo-icon">◈</span><div><strong>MS ROBOTIKA</strong><small>OPEN ENGINEERING</small></div></div>
+  <p class="side-caption">VISIÓN INDUSTRIAL</p>
+  <nav><a href="#vision" class="active"><span>◉</span> Inspección</a><a href="#config"><span>☷</span> Receta de análisis</a><a href="#history"><span>▤</span> Historial</a></nav>
+  <div class="side-bottom"><span class="online-indicator"></span> Motor local · v0.3.0<p>Open source · MIT<br>Procesamiento dentro de tu navegador</p></div>
+</aside>
+<main>
+<header class="topbar"><div><span class="breadcrumb">MS ROBOTIKA / QUALITY CONTROL / 001</span><h1>AB-Vision <em>Inspector</em> <span class="version">MVP 0.3</span></h1><p class="lead">Inspección visual transparente, local y sin licencias.</p></div><div class="top-actions"><span class="privacy">● PROCESAMIENTO LOCAL</span><a class="ghost documentation" href="https://github.com/msrobotika" target="_blank" rel="noopener">MS ROBOTIKA ↗</a></div></header>
+<div class="notice-rail"><span class="notice-icon">ⓘ</span><div><strong>Modo de laboratorio.</strong> El resultado OK/NOK es orientativo. Esta versión no está validada para seguridad, rechazo automático de piezas ni control de maquinaria.</div></div>
+<div class="main-grid">
+<section class="work-card" id="vision"><div class="card-head"><div><span class="overline">01 / ÁREA DE VISIÓN</span><h2>Inspección de imagen</h2></div><span class="live-status" id="feed-status">● SIN FUENTE</span></div>
+  <div class="viewer"><canvas id="overlay" width="1280" height="720" aria-label="Área de inspección: arrastra para seleccionar región de interés"></canvas><video id="camera-video" autoplay muted playsinline hidden></video><div class="viewer-status"><span id="source-label">Imagen de demostración</span><span id="image-size">1280 × 720</span></div><div class="viewer-corner tl"></div><div class="viewer-corner tr"></div><div class="viewer-corner bl"></div><div class="viewer-corner br"></div></div>
+  <div class="tool-bar"><button id="demo" class="primary">◈ Cargar demostración</button><label class="button file-button">↑ Abrir imagen<input id="image-file" type="file" accept="image/png,image/jpeg,image/webp,image/bmp"></label><button id="camera-start">◉ Iniciar cámara</button><button id="capture" disabled>◎ Capturar</button><button id="camera-stop" disabled>■ Detener</button></div>
+
+  <div class="connect-panels">
+  <details class="connection-box" id="ip-camera-panel"><summary>◉ Conectar cámara IP (JPEG / MJPEG por LAN)</summary>
+  <div class="connection-grid">
+    <label>IPv4 privada de la cámara<input id="ip-address" inputmode="decimal" placeholder="192.168.1.50" autocomplete="off"></label>
+    <label>Protocolo<select id="ip-protocol"><option value="http">HTTP</option><option value="https">HTTPS certificado válido</option></select></label>
+    <label>Puerto HTTP(S)<input id="ip-port" type="number" min="1" max="65535" value="80"></label>
+    <label>Ruta del snapshot JPEG o MJPEG<input id="ip-path" value="/snapshot.jpg" placeholder="/snapshot.jpg o /video.mjpg"></label>
+    <label>Usuario (si usa Basic)<input id="ip-user" maxlength="128" autocomplete="off"></label>
+    <label>Contraseña (no se guarda)<input id="ip-password" type="password" maxlength="256" autocomplete="off"></label>
+  </div>
+  <label class="check"><input id="ip-approved" type="checkbox">Autorizo expresamente conectarme a esta cámara de mi red privada.</label>
+  <div class="ip-actions"><button id="ip-connect" type="button">Conectar y captar</button><button id="ip-disconnect" type="button" disabled>Desconectar IP</button><span id="ip-state">Sin conexión IP</span></div>
+  <p class="small-muted">Ejemplos de URL de cámara: <code>http://192.168.1.50:80/snapshot.jpg</code> o ruta MJPEG. Solo IPv4 privada; RTSP, ONVIF y Digest pendientes. El servidor local obtiene cada fotograma; imágenes y credenciales no se envían a Internet.</p>
+  </details>
+  </div>
+  <div class="selection-bar"><label class="check"><input type="checkbox" id="roi-mode"><span>Seleccionar ROI arrastrando sobre la imagen</span></label><button class="text-button" id="roi-reset">Restablecer región</button><span id="roi-label">Imagen completa</span></div>
+</section>
+<section class="config-card" id="config"><div class="card-head"><div><span class="overline">02 / PARÁMETROS</span><h2>Receta de inspección</h2></div><span class="small-pill">EDITABLE</span></div>
+  <div class="config-body"><label>Identificador de pieza / lote<input type="text" id="lot" value="LOTE-DEMO-001" maxlength="64" placeholder="Ej. PCB-LINEA-01"></label>
+  <label>Método de detección<select id="mode"><option value="dark">Imperfecciones oscuras</option><option value="light">Zonas claras</option><option value="reference">Diferencia frente a referencia</option></select></label>
+  <div class="parameter"><div class="parameter-head"><label for="threshold">Umbral de detección</label><output id="threshold-value">90</output></div><input type="range" id="threshold" min="0" max="255" value="90"><p id="threshold-hint">Píxeles con luminosidad inferior a 90.</p></div>
+  <div class="parameter"><div class="parameter-head"><label for="min-area">Área mínima por defecto (px)</label><output id="min-area-value">20</output></div><input type="range" id="min-area" min="1" max="3000" value="20"></div>
+  <label>Máximo de defectos permitidos<input type="number" id="max-defects" min="0" max="10000" value="0"></label>
+  <div class="reference-box"><div><strong>Imagen patrón / referencia</strong><p id="reference-label">Ninguna referencia capturada</p></div><button id="set-reference" class="tiny">Tomar referencia</button></div>
+  <details id="calibration-panel" class="calibration-box" open><summary>◫ Metrología · calibración y tolerancias (mm)</summary>
+    <p class="small-muted"><strong>Calibración real:</strong> coloca una regla o patrón de longitud conocida en el MISMO plano que la pieza. Indica su longitud y pulsa «Marcar 2 puntos» para señalar sus extremos en la imagen. La distancia de cámara por sí sola no determina la escala.</p>
+    <div class="cal-grid">
+      <label>Longitud del patrón real (mm)<input id="reference-mm" type="number" min="0.01" max="100000" step="any" value="100"></label>
+      <label>Distancia al plano (mm)<input id="distance-mm" type="number" min="1" max="100000" step="any" value="500"></label>
+      <label>Ancho nominal de pieza (mm)<input id="nominal-width" type="number" min="0.01" max="100000" step="any" value="200"></label>
+      <label>Alto nominal de pieza (mm)<input id="nominal-height" type="number" min="0.01" max="100000" step="any" value="100"></label>
+      <label>Tolerancia ± (mm)<input id="dimension-tolerance" type="number" min="0" max="10000" step="any" value="2"></label>
+      <label>Umbral de pieza clara (0–255)<input id="piece-threshold" type="number" min="0" max="255" value="130"></label>
+    </div>
+    <div class="cal-actions"><button id="mark-scale" type="button">Calibrar: CIAN → MAGENTA</button><button id="clear-scale" type="button">Borrar calibración</button></div>
+    <p id="calibration-status" class="small-muted" aria-live="polite">SIN CALIBRAR · Primero captura una imagen con patrón real.</p>
+    <div class="camera-audit"><strong>AUDITORÍA DE CÁMARA POR FOTOGRAMA</strong>
+      <p>Coloca dos marcas circulares rígidas de color <b>CIAN</b> y <b>MAGENTA</b> en el mismo plano que la pieza, separadas por una distancia conocida. Marca sus centros en ese orden. El sistema las busca en <strong>cada fotograma</strong> y bloquea medidas ante variaciones de posición, escala, giro, resolución o configuración de la fuente.</p>
+      <p id="audit-status" class="audit-indicator audit-bad" aria-live="polite">NO VALIDADA · Falta patrón de calibración físico.</p>
+      <small>No sustituye una calibración intrínseca de lente, corrección de perspectiva, estudio de incertidumbre ni contraste con patrón trazable. Si falla la auditoría: SIN MEDICIÓN, nunca OK dimensional.</small>
+    </div>
+  </details>
+  <div class="config-actions"><button id="analyze" class="big primary">▶ Analizar imagen</button><button id="auto" class="big">⟳ Inspección continua: OFF</button></div>
+  <div class="recipe-actions"><button id="save-recipe" class="flat">Guardar receta</button><button id="export-recipe" class="flat">Exportar JSON</button><label class="flat file-button">Importar JSON<input id="recipe-file" type="file" accept="application/json,.json"></label></div>
+  <div class="status-msg" id="message" role="status" aria-live="polite">Listo para inspeccionar. Puedes empezar con la demostración.</div>
+  </div></section>
+</div>
+<div class="metrics"><div class="metric"><span>RESULTADO DE INSPECCIÓN</span><strong id="verdict" class="pending">SIN ANALIZAR</strong><small id="duration">Esperando imagen</small></div><div class="metric"><span>DEFECTOS DETECTADOS</span><strong id="defects">—</strong><small>Componentes que superan el área mínima</small></div><div class="metric"><span>SUPERFICIE AFECTADA</span><strong id="coverage">—</strong><small>Porcentaje de la región inspeccionada</small></div><div class="metric"><span>ANCHO × ALTO (mm)</span><strong id="measured-size">SIN CALIBRAR</strong><small id="dimension-status">Sin metrología verificada</small></div><div class="metric"><span>INSPECCIONES EN SESIÓN</span><strong id="count">0</strong><small>Historial exportable a CSV</small></div></div>
+<section class="history-card" id="history"><div class="card-head"><div><span class="overline">03 / TRAZABILIDAD</span><h2>Registro de inspecciones</h2></div><div class="history-actions"><button id="save-png">Exportar imagen anotada</button><button id="export-csv">Exportar CSV</button><button id="export-json">Exportar JSON</button><button id="clear-history" class="destructive">Vaciar</button></div></div>
+  <div class="table-scroller"><table><thead><tr><th>HORA</th><th>IDENTIFICADOR</th><th>MODO</th><th>DEFECTOS</th><th>COBERTURA</th><th>RESULTADO</th><th>DIMENSIONES (mm)</th><th>DURACIÓN</th></tr></thead><tbody id="history-rows"><tr><td colspan="8" class="empty">Los análisis realizados durante esta sesión aparecerán aquí.</td></tr></tbody></table></div></section>
+<footer><span>© 2026 MS ROBOTIKA · Diseño y motor independientes · Licencia MIT</span><span>Datos e imágenes: procesados localmente · Sin telemetría</span></footer>
+</main></div>
+<canvas id="source" width="1280" height="720" hidden></canvas>
+<script src="src/vision-core.js" defer></script><script src="src/app.js" defer></script></body></html>
