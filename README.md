@@ -1,5 +1,10 @@
 # AB-Vision Inspector
 
+> **Ficha del proyecto · MS ROBOTIKA**  
+> **Estado:** v0.3 alfa · inspección visual de laboratorio · **Licencia:** MIT (archivo LICENSE)  
+> [**Capturas verificables**](docs/screenshots/) · [Pruebas/CI](https://github.com/msrobotika/-AB-Vision-Inspector/actions) · [Estado técnico](docs/PROJECT_STATUS.md)  
+> **Límite:** La auditoría de cámara con dos referencias no sustituye calibración metrológica trazable.
+
 **MS ROBOTIKA · Software libre · Inspección visual local · Windows / Linux · 0.3.0 (alfa de laboratorio)**
 
 Aplicación original para inspeccionar imágenes y cámaras locales mediante umbrales, segmentación y componentes conectados. Motor matemático propio en JavaScript sin bibliotecas de visión artificial ni servicios en la nube. El análisis se ejecuta **en el navegador**. El servidor Python solo entrega el frontend y puede obtener bajo autorización explícita fotogramas de cámaras IP privadas.

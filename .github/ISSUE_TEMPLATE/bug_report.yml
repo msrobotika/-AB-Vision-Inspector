@@ -1,0 +1,20 @@
+name: "Bug report"
+description: "Fallo reproducible, sin credenciales ni datos industriales"
+title: "[bug] "
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Versión, SO y entorno
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Pasos y resultado esperado/obtenido
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Logs y capturas anonimizadas
