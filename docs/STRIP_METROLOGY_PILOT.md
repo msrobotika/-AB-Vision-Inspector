@@ -4,7 +4,7 @@ MS ROBOTIKA · 23/10/2026 · EXPERIMENTAL · No acreditado para producción.
 
 ## Función implementada
 
-Inspector de anchura de una, dos, tres o cuatro tiras paralelas de goma observadas por una cámara cenital; el avance se representa verticalmente en la imagen, la anchura horizontalmente. Analiza cinco secciones del fotograma, calcula mínimos, máximos, medias y desviaciones frente a nominal ± tolerancia de química/calidad. Frecuencia orientativa 1 fotograma/segundo. Alertas visuales, CSV temporal y PNG anotado bajo petición.
+Inspector de anchura de una, dos, tres o cuatro tiras paralelas de goma observadas por una cámara cenital; el avance se representa verticalmente en la imagen, la anchura horizontalmente. Analiza once secciones del fotograma, calcula mínimos, máximos, medias y desviaciones frente a nominal ± tolerancia de química/calidad. Frecuencia orientativa 1 fotograma/segundo. Alertas visuales, CSV temporal y PNG anotado bajo petición.
 
 Entradas: webcam USB/UVC vía navegador (preferentemente http://127.0.0.1 con Python), o cámaras IP privadas IPv4 que ofrezcan JPEG/MJPEG y estén autorizadas; no hay conexión a PLC ni comandos físicos. RTSP/ONVIF directo NO soportado: necesita puente local independiente sujeto a permisos.
 
@@ -15,6 +15,14 @@ Dos fiduciales físicos rígidos CIAN/MAGENTA deben permanecer visibles en el MI
 Primera captura con muestra: detectar posición de las tiras y guardar valores iniciales informativos. En cada fotograma vuelve a auditar los marcadores y los bordes; si faltan marcadores, cambian resolución/fuente, hay carriles solapados o región incompleta: SIN MEDICIÓN. Si supera inequívocamente tolerancia: NOK. Si solapa la incertidumbre indicativa: REVISAR. Solo si margen menos incertidumbre lo permite: OK.
 
 La incertidumbre de bordes y fiduciales sigue siendo una aproximación de laboratorio, no una calibración metrológica acreditada. Falta corregir lente/perspectiva/homografía y ensayar repetibilidad, reproducibilidad y comparación física contra patrones trazables.
+
+## Comportamiento esperado con oscilaciones transversales
+
+Las tiras extruidas pueden desplazarse lateralmente por vibración u oscilación normal de la línea, incluso describiendo curvas suaves dentro del campo de visión. Este movimiento **no** debe producir rechazo por posición. En cada corte se detectan bordes, se vinculan carriles separados de izquierda a derecha y se estima la tangente local de la línea central. El ancho horizontal se corrige a ancho **normal a la dirección local** mediante la pendiente, con 11 secciones a lo largo del avance. El veredicto se deriva solo de los anchos mínimos/máximos comparados con nominal ± tolerancia (más margen de incertidumbre); se anota el desplazamiento lateral respecto a la muestra solo como diagnóstico, sin modificar el veredicto.
+
+Si la oscilación saca una tira de la región de interés, cambia de orden al cruzarse, la oculta o introduce pendientes superiores al rango del método, debe emitirse SIN MEDICIÓN. Oscilación normal dentro de la ROI + anchura constante = OK. Se verifica con pruebas de traslación ±70 px y curvas simuladas; el laboratorio ofrece un botón «Simular oscilación lateral» independientemente de «Simular variación de ancho».
+
+Este piloto solo captura ~1 fotograma/s; por tanto, **no detecta necesariamente todos los defectos cortos** en una línea de goma en producción. Para garantía de inspección de un material continuo será imprescindible definir resolución temporal, velocidad de cinta, longitud mínima de defecto, FPS y, preferiblemente, disparo con encoder/trigger y muestreo sin pérdidas.
 
 ## Recetas y registros
 
