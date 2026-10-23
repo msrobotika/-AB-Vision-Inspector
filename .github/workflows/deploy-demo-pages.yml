@@ -1,0 +1,44 @@
+name: Publish browser-only Vision demo (manual, owner approval)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: ms-robotika-vision-pages
+  cancel-in-progress: false
+jobs:
+  static-demo:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate and assemble PUBLIC ONLY browser assets
+        run: |
+          set -eu
+          python tools_build_portable.py
+          test -f index.html
+          mkdir -p _site/src
+          cp index.html _site/
+          cp favicon.svg _site/
+          cp src/style.css src/strip.css src/vision-core.js src/strip-core.js src/app.js src/strip-ui.js _site/src/
+          cp AB-Vision-Inspector-PORTABLE.html _site/
+          if grep -nE 'src="/api/|https?://192\\.168\\.|password.*=' _site/index.html; then
+            echo 'Unexpected private dependency in public page'
+            exit 1
+          fi
+          test ! -e _site/serve.py
+          test ! -e _site/SECURITY.md
+          test ! -e _site/.env
+          echo 'Only static UI, public JS/CSS, and portable HTML packed'
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - name: Deploy STATIC viewer to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4
