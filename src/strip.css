@@ -29,3 +29,12 @@
 @media(max-width:1250px){.strip-fields{grid-template-columns:repeat(2,minmax(125px,1fr))}}
 @media(max-width:850px){.strip-grid{grid-template-columns:1fr}.strip-results{grid-template-columns:repeat(2,minmax(0,1fr))}.strip-heading{flex-direction:column}.strip-status{white-space:normal}}
 @media(max-width:480px){.strip-module{padding:13px;margin:18px 0}.strip-fields{grid-template-columns:1fr 1fr;gap:8px}.strip-results{grid-template-columns:1fr 1fr}.strip-heading h2{font-size:19px}.strip-actions select{max-width:100%}}
+
+/* Virtual guides overlay on the actual camera raster; no marks written to the image. */
+.viewer{position:relative}
+#strip-guides-layer{position:absolute;inset:0;width:100%;height:100%;z-index:3;
+  pointer-events:none;touch-action:none}
+#strip-guides-layer.marking{pointer-events:auto;cursor:crosshair}
+#strip-guide-help{border-left:3px solid #49afbf;padding-left:12px}
+#strip-guides:not([hidden]){border-color:#388da8;color:#9ae7ff}
+#strip-guides[hidden]{display:none}
