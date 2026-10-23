@@ -69,7 +69,7 @@
 
 <section class="strip-module" id="strips" aria-label="Control dimensional de tiras de goma">
   <header class="strip-heading"><div><span class="overline">04 / METROLOGÍA EN CONTINUO</span><h2>Tiras de goma · control de ancho</h2>
-  <p>Inspección cenital de 1–4 tiras sobre cinta, cámara USB o cámara IP JPEG/MJPEG autorizada. Trazabilidad local por tiempo y fotograma.</p></div>
+  <p>Inspección cenital de 1–4 tiras sobre cinta, con movimiento lateral/oscilación permitidos. La calidad depende de su anchura real perpendicular al recorrido, no de que permanezcan centradas en un píxel fijo. Cámara USB o IP autorizada; trazabilidad por tiempo y fotograma.</p></div>
   <span id="strip-status" class="strip-status" aria-live="polite">SIN RECETA CALIBRADA</span></header>
   <div class="strip-alert"><strong>Antes de medir:</strong> coloca dos marcas rígidas CIAN y MAGENTA, separadas una distancia física conocida en el plano de la goma y fuera de las tiras. Esta referencia se reconoce automáticamente y se <strong>audita en cada fotograma</strong>. La muestra solo sirve para aprender las zonas y anchuras iniciales; su ancho nominal no valida la escala. Sin referencia: <strong>SIN MEDICIÓN</strong>.</div>
   <div class="strip-grid">
@@ -91,6 +91,7 @@
         <button id="strip-once" type="button">▶ Medir fotograma</button>
         <button id="strip-run" type="button">⟳ Continuo: OFF</button>
         <button id="strip-fault" type="button">Simular variación de ancho</button>
+        <button id="strip-sway" type="button">Simular oscilación lateral: OFF</button>
       </div>
       <div class="strip-actions">
         <button id="strip-save" type="button">Guardar receta local</button>
