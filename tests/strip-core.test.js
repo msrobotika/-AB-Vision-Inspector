@@ -158,3 +158,29 @@ test('si la tira oscilante abandona ROI la medida se bloquea, nunca queda OK',()
    vision.auditCameraFrame(original,physical.calibration,'camera:demo'));
  assert.equal(out.status,'INVALID');
 });
+
+test('montaje ilustrado 3×50 mm, ±2, referencias 100 mm: FOV corto BLOQUEA la falsa calibración',()=>{
+  const r=engine.validateRecipe({
+    id:'GOMA-3X50-L01',count:3,nominalMm:50,toleranceMm:2,
+    referenceMm:100,distanceMm:800,threshold:95,minRunPx:8,
+    polarity:'dark',roi:{x:110,y:125,width:1060,height:390}
+  });
+  // El esquema pone las referencias muy separadas dentro de 1280 px.
+  // Con 1000 px /100 mm, cada tira de 50 mm ocuparía 500 px: no caben tres.
+  const impossible=engine.assessFieldOfView(r,1000,1280);
+  assert.equal(impossible.status,'INVALID');
+  assert.match(impossible.reason,/CAMPO VISUAL INSUFICIENTE/);
+  assert.ok(impossible.minimumWidthPx>r.roi.width);
+  // Al corregir el campo de visión/escala sí es geométricamente posible.
+  const possible=engine.assessFieldOfView(r,350,1280);
+  assert.equal(possible.status,'POSSIBLE',possible.reason);
+  assert.ok(possible.projectedStripPx<180);
+  // Precisión también debe verse: tolerancia por debajo de 3px no es aceptable.
+  const coarse=engine.assessFieldOfView({...r,referenceMm:1000,nominalMm:2,toleranceMm:.01},50,1280);
+  assert.equal(coarse.status,'REVIEW');
+});
+test('no aceptar ROI fuera de foto ni patrones/escala inventados',()=>{
+ const r=recipe(3);
+ assert.equal(engine.assessFieldOfView({...r,roi:{x:1100,y:125,width:300,height:390}},1000,1280).status,'INVALID');
+ assert.throws(()=>engine.assessFieldOfView(r,0,1280),/Distancia en píxeles/);
+});

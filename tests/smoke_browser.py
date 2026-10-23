@@ -141,10 +141,20 @@ class BrowserSmoke(unittest.TestCase):
         page.locator("#strip-fault").click()
         self.assertEqual(page.locator("#strip-verdict").inner_text(),"NOK")
         self.assertIn("ALERTA",page.locator("#strip-message").inner_text())
+        page.locator("#strip-export-last-nok").wait_for(state="visible")
+        page.wait_for_function("() => !document.querySelector('#strip-export-last-nok').disabled")
+        with page.expect_download() as evidence:
+            page.locator("#strip-export-last-nok").click()
+        self.assertIn("AB-Vision-NOK-F",evidence.value.suggested_filename)
+        self.assertTrue(evidence.value.suggested_filename.endswith(".png"))
         page.screenshot(path=str(OUT/"vision-tiras-nok.png"),full_page=True)
         with page.expect_download() as d:
             page.locator("#strip-export-csv").click()
         self.assertTrue(d.value.suggested_filename.endswith(".csv"))
+        with open(d.value.path(), "r", encoding="utf-8") as result_csv:
+            csv_text=result_csv.read()
+        self.assertIn("strip1MinMm",csv_text)
+        self.assertIn("strip4MaxMm",csv_text)
         self.assertEqual(errors,[])
         page.close()
 
@@ -186,6 +196,31 @@ class BrowserSmoke(unittest.TestCase):
         self.assertEqual(page.locator("#strip-verdict").inner_text(),"SIN MEDICIÓN")
         self.assertIn("NO VALIDADA",page.locator("#strip-audit").inner_text())
         page.screenshot(path=str(OUT/"vision-tiras-referencia-perdida.png"),full_page=True)
+        page.close()
+
+    def test_three_strip_physical_preset_requires_independent_real_camera_calibration(self):
+        """The supplied top-down illustration is not a metrically scaled calibration."""
+        page=self.new_page(1500,1000)
+        errors=[]
+        page.on("pageerror", lambda error: errors.append(str(error)))
+        page.set_content(PORTABLE.read_text(encoding="utf-8"), wait_until="load")
+        page.locator("#strip-example-3x50").click()
+        self.assertEqual(page.locator("#strip-count").input_value(),"3")
+        self.assertEqual(page.locator("#strip-nominal").input_value(),"50")
+        self.assertEqual(page.locator("#strip-tolerance").input_value(),"2")
+        self.assertEqual(page.locator("#strip-reference").input_value(),"100")
+        self.assertEqual(page.locator("#strip-distance").input_value(),"800")
+        self.assertEqual(page.locator("#strip-verdict").inner_text(),"SIN MEDICIÓN")
+        page.locator("#strip-demo").click()
+        page.locator("#strip-calibrate").click()
+        # Demo geometry is based on 200 mm between synthetic fiducials and
+        # narrow 10 mm strips; relabelling them 50 mm must NOT yield false OK.
+        self.assertEqual(page.locator("#strip-verdict").inner_text(),"SIN MEDICIÓN")
+        self.assertIn("CAMPO VISUAL INSUFICIENTE",
+                      page.locator("#strip-message").inner_text())
+        self.assertEqual(errors, [])
+        page.screenshot(path=str(OUT/"vision-montaje-real-preflight.png"),
+                        full_page=True)
         page.close()
 
     def test_strip_direct_html_assets_are_self_contained(self):

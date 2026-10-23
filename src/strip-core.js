@@ -132,6 +132,34 @@
    return {status:'DETECTED',reason:null,lanes,lines,
      detectedPerRow:lines.map(l=>l.segments.length)};
  }
+ /**
+  * Geometric sanity check BEFORE claiming calibration. The sum of physical
+  * strip widths must fit in the measured ROI at the independent marker scale.
+  * This is a necessary condition, not an optical calibration or accuracy proof.
+  */
+ function assessFieldOfView(recipeInput, referencePixels, frameWidth){
+   const recipe=validateRecipe(recipeInput);
+   finite(referencePixels,1,100000,"Distancia en píxeles entre marcadores");
+   finite(frameWidth,64,100000,"Anchura de imagen");
+   if(recipe.roi.x+recipe.roi.width>frameWidth)
+     return {status:"INVALID",reason:"ROI fuera del campo de visión"};
+   const mmPerPixel=recipe.referenceMm/referencePixels;
+   const projectedStripPx=recipe.nominalMm/mmPerPixel;
+   const minimumWidthPx=projectedStripPx*recipe.count;
+   const physicalWidthMm=recipe.count*recipe.nominalMm;
+   if(minimumWidthPx>=recipe.roi.width-2)
+     return {status:"INVALID",mmPerPixel,projectedStripPx,minimumWidthPx,
+       reason:"CAMPO VISUAL INSUFICIENTE: "+recipe.count+
+       " tiras de "+recipe.nominalMm+" mm ocupan al menos "+
+       Math.ceil(minimumWidthPx)+" px y la ROI solo tiene "+recipe.roi.width+
+       " px. Aleja/ajusta óptica, amplía ROI o revisa distancia real de marcadores; no calibres usando el ancho nominal."};
+   if(recipe.toleranceMm>0 && recipe.toleranceMm/mmPerPixel<3)
+     return {status:"REVIEW",mmPerPixel,projectedStripPx,minimumWidthPx,
+       reason:"RESOLUCIÓN INSUFICIENTE: tolerancia representada por menos de 3 píxeles; cambia óptica o resolución."};
+   return {status:"POSSIBLE",mmPerPixel,projectedStripPx,
+     minimumWidthPx,physicalWidthMm,
+     reason:"Geometría posible en ROI; NO acredita precisión, lente, perspectiva ni referencia coplanar."};
+ }
  function evaluate(image,recipeInput,calibration,audit,baseline=null){
    const recipe=validateRecipe(recipeInput);
    const extracted=extractStrips(image,recipe);
@@ -176,5 +204,5 @@
      centers:result.lanes.map(l=>l.centerPx),
      widthsAtSampleMm:result.lanes.map(l=>l.meanMm)});
  }
- return Object.freeze({validateRecipe,findReferenceMarkers,extractStrips,evaluate,makeBaseline});
+ return Object.freeze({validateRecipe,findReferenceMarkers,extractStrips,evaluate,makeBaseline,assessFieldOfView});
 });
