@@ -46,6 +46,8 @@ function loadRecipe(recipe){
   ])$(id).value=value;
   calibration=null;baseline=null;liveRecipe=null;
   stop();
+  try{acq.setRoi(valid.roi)}
+  catch{note('ROI guardada no coincide con resolución de cámara: selecciona de nuevo la región.',true)}
   state('INVALID','RECETA CARGADA · RECALIBRAR');
   $txt('strip-scale','SIN CALIBRAR');
   $txt('strip-audit','La receta no contiene calibración activa; verifica marcas físicas');
