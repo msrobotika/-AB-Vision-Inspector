@@ -24,7 +24,8 @@ ASSETS = {
     '/': 'index.html', '/index.html': 'index.html',
     '/src/app.js': 'src/app.js', '/src/vision-core.js': 'src/vision-core.js',
     '/src/style.css': 'src/style.css', '/src/strip.css': 'src/strip.css',
-    '/src/strip-core.js': 'src/strip-core.js', '/src/strip-ui.js': 'src/strip-ui.js',
+    '/src/strip-core.js': 'src/strip-core.js',
+    '/src/virtual-calibration.js': 'src/virtual-calibration.js', '/src/strip-ui.js': 'src/strip-ui.js',
     '/favicon.svg': 'favicon.svg',
 }
 CAMERA_LIMIT = 4 * 1024 * 1024
