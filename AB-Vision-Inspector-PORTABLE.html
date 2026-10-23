@@ -156,6 +156,7 @@
         <button id="strip-export-recipe" type="button">Exportar receta JSON</button>
         <label class="button file-button">Importar receta<input id="strip-import-recipe" type="file" accept=".json,application/json"></label>
         <button id="strip-export-csv" type="button">Exportar CSV de mediciones</button>
+        <button id="strip-export-last-nok" type="button" disabled title="Fotograma de la última medida NOK, guardado en memoria hasta cerrar la página">Descargar último NOK (PNG)</button>
         <button id="strip-export-png" type="button">Guardar imagen anotada</button>
       </div>
       <p class="small-muted"><strong>Montaje de la imagen:</strong> 3 tiras nominales de 50 mm, tolerancia ±2 mm, referencias a 100 mm centro–centro y altura cámara-plano de 800 mm. <strong>Ilustración, no imagen de medición a escala.</strong> Verifica con el visor que las tres tiras caben en el campo real. Los fiduciales deben estar a la altura de la superficie medida, no solo pegados a la cinta si la goma tiene espesor.</p>
@@ -170,7 +171,7 @@
     </div>
   </div>
   <div class="table-scroller"><table><thead><tr><th>HORA UTC</th><th>RECETA</th><th>FOTOGRAMA</th><th>ANCHOS T1 / T2 / T3 / T4 (mm)</th><th>DESVIACIÓN / VARIACIÓN</th><th>ESTADO</th><th>AUDITORÍA</th></tr></thead><tbody id="strip-history"><tr><td colspan="7">Sin mediciones. Los fotogramas se procesan localmente; no se archivan automáticamente.</td></tr></tbody></table></div>
-  <p class="small-muted">Histórico temporal limitado a 1000 muestras en memoria. Exporta CSV antes de cerrar. No es un historiador industrial ni proporciona rechazo de piezas o control de seguridad.</p>
+  <p class="small-muted">Histórico temporal limitado a 1000 muestras en memoria. El último resultado NOK conserva una captura anotada temporal descargable con número de fotograma; CSV añade mínimos/máximos por tira. Exporta ambos antes de cerrar. No es un historiador industrial ni proporciona rechazo de piezas o control de seguridad.</p>
 </section>
 <div class="metrics"><div class="metric"><span>RESULTADO DE INSPECCIÓN</span><strong id="verdict" class="pending">SIN ANALIZAR</strong><small id="duration">Esperando imagen</small></div><div class="metric"><span>DEFECTOS DETECTADOS</span><strong id="defects">—</strong><small>Componentes que superan el área mínima</small></div><div class="metric"><span>SUPERFICIE AFECTADA</span><strong id="coverage">—</strong><small>Porcentaje de la región inspeccionada</small></div><div class="metric"><span>ANCHO × ALTO (mm)</span><strong id="measured-size">SIN CALIBRAR</strong><small id="dimension-status">Sin metrología verificada</small></div><div class="metric"><span>INSPECCIONES EN SESIÓN</span><strong id="count">0</strong><small>Historial exportable a CSV</small></div></div>
 <section class="history-card" id="history"><div class="card-head"><div><span class="overline">03 / TRAZABILIDAD</span><h2>Registro de inspecciones</h2></div><div class="history-actions"><button id="save-png">Exportar imagen anotada</button><button id="export-csv">Exportar CSV</button><button id="export-json">Exportar JSON</button><button id="clear-history" class="destructive">Vaciar</button></div></div>
@@ -1151,6 +1152,7 @@ const src=$('source'),view=$('overlay');
 let calibration=null,baseline=null,active=false,timer=null,busy=false;
 let seq=0,history=[],demoFault=false,demoOscillating=false;
 let liveRecipe=null;
+let lastNokEvidence=null; // one annotated capture in RAM only; never uploads
 const memoryKey='abvision-strip-recipes-v1';
 const $txt=(id,value)=>$(id).textContent=String(value);
 const note=(message,error=false)=>{$txt('strip-message',message);$('strip-message').classList.toggle('error',error)};
@@ -1268,14 +1270,18 @@ function exportCsv(){
   const columns=['timestampUTC','recipe','frame','source','status','audit','reason',
     'strip1Mm','strip2Mm','strip3Mm','strip4Mm','strip1Status','strip2Status',
     'strip3Status','strip4Status','lateralShiftT1Px','lateralShiftT2Px',
-    'lateralShiftT3Px','lateralShiftT4Px','scaleMmPerPixel','uncertaintyMm'];
+    'lateralShiftT3Px','lateralShiftT4Px','scaleMmPerPixel','uncertaintyMm',
+    'strip1MinMm','strip2MinMm','strip3MinMm','strip4MinMm',
+    'strip1MaxMm','strip2MaxMm','strip3MaxMm','strip4MaxMm'];
   const rows=[columns.map(csv).join(',')];
   for(const entry of history){
     const vals=[entry.at,entry.recipe,entry.frame,entry.source,entry.status,entry.audit,entry.reason,
       ...[0,1,2,3].map(i=>entry.lanes[i]?.meanMm??''),
       ...[0,1,2,3].map(i=>entry.lanes[i]?.status??''),
       ...[0,1,2,3].map(i=>entry.lanes[i]?.lateralShiftPx??''),
-      entry.mmPerPixel??'',entry.uncertaintyMm??''];
+      entry.mmPerPixel??'',entry.uncertaintyMm??'',
+      ...[0,1,2,3].map(i=>entry.lanes[i]?.minMm??''),
+      ...[0,1,2,3].map(i=>entry.lanes[i]?.maxMm??'')];
     rows.push(vals.map(csv).join(','));
   }
   download('AB-Vision-tiras-traza-'+new Date().toISOString().slice(0,10)+'.csv',
@@ -1304,6 +1310,21 @@ function trace(result,recipe,origin){
   history.push(record);if(history.length>1000)history.shift();
   $txt('strip-samples',history.length);
   renderHistory();
+  return record;
+}
+function retainLastNok(record){
+  // Snapshot the current ANNOTATED canvas synchronously so future frames cannot
+  // overwrite the failure evidence before the browser finishes encoding.
+  const copy=document.createElement('canvas');
+  copy.width=view.width;copy.height=view.height;
+  copy.getContext('2d').drawImage(view,0,0);
+  const identity=record.frame;
+  copy.toBlob(blob=>{
+    if(!blob||blob.size<100)return;
+    lastNokEvidence={blob,record};
+    $('strip-export-last-nok').disabled=false;
+    $('strip-export-last-nok').textContent='Descargar NOK · fotograma '+identity;
+  },'image/png');
 }
 function formatLanes(lanes){
   return lanes?.length ? lanes.map(l=>'T'+l.index+': '+l.meanMm.toFixed(2)+' mm ('+l.status+')').join(' · ') : '—';
@@ -1327,7 +1348,10 @@ function measure({store=true}={}){
   $txt('strip-scale',audit.status==='VERIFIED'?audit.mmPerPixel.toFixed(5)+' mm/px':'ESCALA NO VALIDADA');
   $txt('strip-widths',formatLanes(result.lanes));
   acq.setOverlay(result.lanes);
-  if(store)trace(result,recipe,acq.isStripDemo()?'DEMO_SINTETICA':acq.isLive()?'CAMARA_LIVE':'IMAGEN_ESTATICA');
+  if(store){
+    const record=trace(result,recipe,acq.isStripDemo()?'DEMO_SINTETICA':acq.isLive()?'CAMARA_LIVE':'IMAGEN_ESTATICA');
+    if(result.status==='NOK')retainLastNok(record);
+  }
   if(result.status==='INVALID')note('Lectura bloqueada: '+result.reason,true);
   else if(result.status==='NOK')note('ALERTA: ancho fuera del margen en al menos una tira (inspección visual, NO control automático).',true);
   else if(result.status==='REVIEW')note('REVISAR: la incertidumbre, el desplazamiento o el borde pueden afectar el veredicto.');
@@ -1447,6 +1471,16 @@ $('strip-saved').addEventListener('change',()=>{
 $('strip-export-recipe').addEventListener('click',exportRecipe);
 $('strip-import-recipe').addEventListener('change',importRecipe);
 $('strip-export-csv').addEventListener('click',exportCsv);
+$('strip-export-last-nok').addEventListener('click',()=>{
+  const image=lastNokEvidence;
+  if(!image){note('Todavía no se ha capturado ningún NOK válido.',true);return}
+  const timestamp=image.record.at.replaceAll(':','-').replaceAll('.','-');
+  download('AB-Vision-NOK-F'+image.record.frame+'-'+timestamp+'.png',
+    image.blob,'image/png');
+  note('Imagen anotada NOK exportada · fotograma '+image.record.frame+
+    '. Exporta también el CSV para conservar receta, hora, mín/máx y estado. No existe archivo automático persistente.');
+});
+
 $('strip-export-png').addEventListener('click',()=>{
   if(!acq.getFrame()){note('No hay imagen para guardar',true);return}
   const canvas=$('overlay');canvas.toBlob(blob=>{
