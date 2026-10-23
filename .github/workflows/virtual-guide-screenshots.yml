@@ -1,0 +1,51 @@
+name: Publish genuine virtual-guide screenshots to PR branch
+on:
+  push:
+    branches:
+      - feat/virtual-belt-edge-calibration-20261024
+    paths-ignore:
+      - "docs/screenshots/*.png"
+permissions:
+  contents: write
+jobs:
+  images:
+    name: Verified Chromium screenshots into feature PR
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/virtual-belt-edge-calibration-20261024
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Validate actual calibration model before screenshots
+        run: |
+          node --test tests/core.test.js tests/strip-core.test.js tests/virtual-calibration.test.js
+          python tools_build_portable.py
+      - name: Install Chromium from pinned test dependencies
+        run: |
+          python -m pip install -r requirements-dev.txt
+          python -m playwright install --with-deps chromium
+      - name: Run original app in Chromium, click guides, make real captures
+        run: python -m unittest discover -s tests -p smoke_browser.py -v
+      - name: Keep images available even if git cannot write
+        uses: actions/upload-artifact@v4
+        with:
+          name: AB-Vision-virtual-guide-Chromium
+          path: docs/screenshots/vision-guias-virtuales-*.png
+          retention-days: 30
+          if-no-files-found: error
+      - name: Commit verified screenshot PNG only on feature branch
+        run: |
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add docs/screenshots/vision-guias-virtuales-*.png
+          if ! git diff --cached --quiet; then
+            git commit -m "docs(vision): real Chromium captures of guide calibration, width NOK and lost edge"
+            git push origin HEAD:feat/virtual-belt-edge-calibration-20261024
+          fi

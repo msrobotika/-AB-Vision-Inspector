@@ -29,17 +29,32 @@ jobs:
           node --check src/vision-core.js
           node --check src/app.js
           node --check src/strip-core.js
+          node --check src/virtual-calibration.js
           node --check src/strip-ui.js
-          node --test tests/core.test.js tests/strip-core.test.js
+          node --test tests/core.test.js tests/strip-core.test.js tests/virtual-calibration.test.js
       - name: Validar empaquetado HTML completamente portable
         run: |
           python tools_build_portable.py
           python - <<'PY'
           from pathlib import Path
           html=Path('AB-Vision-Inspector-PORTABLE.html').read_text(encoding='utf-8')
-          assert 'ABStripCore' in html and 'strip-calibrate' in html
+          assert 'ABStripCore' in html and 'ABBEltEdgeCalibration' not in html and 'ABBeltEdgeCalibration' in html and 'strip-guides-layer' in html
           assert '<script src=' not in html and 'stylesheet' not in html
           print('Portable strip viewer: self-contained PASS')
+          PY
+      - name: Comprobar visor HTML público (solo informativo)
+        run: |
+          python - <<'PY'
+          import urllib.request
+          url = "https://msrobotika.github.io/-AB-Vision-Inspector/"
+          try:
+              with urllib.request.urlopen(url,timeout=12) as res:
+                  html = res.read(300000).decode("utf-8",errors="replace")
+                  print("PUBLIC_VIEWER",res.status,
+                        "USABLE_HTML" if "AB-Vision Inspector" in html and "strip-guides-layer" in html
+                        else "NOT_CURRENT_UI")
+          except Exception as exc:
+              print("PUBLIC_VIEWER_NO_VERIFICADO",type(exc).__name__,str(exc)[:100])
           PY
       - name: Comprobar servidor cámaras IP
         run: |

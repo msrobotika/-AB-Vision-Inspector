@@ -135,7 +135,7 @@ class BrowserSmoke(unittest.TestCase):
         page.locator("#strip-calibrate").click()
         self.assertIn("CALIBRADA",page.locator("#strip-status").inner_text())
         self.assertEqual(page.locator("#strip-verdict").inner_text(),"OK")
-        self.assertIn("VERIFICADA",page.locator("#strip-audit").inner_text())
+        self.assertIn("FIDUCIALES DETECTADOS",page.locator("#strip-audit").inner_text())
         self.assertIn("T4:",page.locator("#strip-widths").inner_text())
         page.screenshot(path=str(OUT/"vision-tiras-cuatro-ok.png"),full_page=True)
         page.locator("#strip-fault").click()
@@ -186,6 +186,50 @@ class BrowserSmoke(unittest.TestCase):
         self.assertEqual(page.locator("#strip-verdict").inner_text(),"SIN MEDICIÓN")
         self.assertIn("NO VALIDADA",page.locator("#strip-audit").inner_text())
         page.screenshot(path=str(OUT/"vision-tiras-referencia-perdida.png"),full_page=True)
+        page.close()
+
+
+    def test_virtual_guides_conveyor_edges_and_width_nok(self):
+        """Real Chromium clicks on overlay; no physical marks on rubber strips."""
+        page=self.new_page(1500,1050)
+        errors=[]
+        page.on("pageerror",lambda error: errors.append(str(error)))
+        page.goto(self.url,wait_until="load")
+        page.locator("#strip-demo").click()
+        page.locator("#strip-method").select_option("belt-edges")
+        page.locator("#strip-reference").fill("220")
+        page.locator("#strip-guides").click()
+        # Use pointer events at the two REAL synthetic conveyor edges, in
+        # canvas image coordinates. Virtual guides are drawn on a separate layer.
+        for x in (90,1190):
+            page.evaluate("""x=>{
+              const layer=document.querySelector('#strip-guides-layer');
+              const rect=layer.getBoundingClientRect();
+              layer.dispatchEvent(new PointerEvent('pointerdown',{
+                bubbles:true,pointerId:11,
+                clientX:rect.left+x*rect.width/layer.width,
+                clientY:rect.top+300*rect.height/layer.height
+              }));
+            }""",x)
+        page.locator("#strip-calibrate").click()
+        self.assertIn("CALIBRADA",page.locator("#strip-status").inner_text())
+        self.assertEqual(page.locator("#strip-verdict").inner_text(),"OK")
+        self.assertIn("sin acreditación",page.locator("#strip-audit").inner_text().lower())
+        self.assertIn("mm/px",page.locator("#strip-scale").inner_text())
+        page.screenshot(path=str(OUT/"vision-guias-virtuales-cinta-ok.png"),full_page=True)
+        page.locator("#strip-fault").click()
+        self.assertEqual(page.locator("#strip-verdict").inner_text(),"NOK")
+        page.screenshot(path=str(OUT/"vision-guias-virtuales-cinta-nok.png"),full_page=True)
+        # Hide the measured physical belt edge in the source raster.
+        page.evaluate("""()=>{
+          const ctx=document.querySelector('#source').getContext('2d');
+          ctx.fillStyle='#abb5b4';ctx.fillRect(82,80,18,510);
+        }""")
+        page.locator("#strip-once").click()
+        self.assertEqual(page.locator("#strip-verdict").inner_text(),"SIN MEDICIÓN")
+        self.assertIn("NO VALIDADA",page.locator("#strip-audit").inner_text())
+        page.screenshot(path=str(OUT/"vision-guias-virtuales-borde-perdido.png"),full_page=True)
+        self.assertEqual(errors,[])
         page.close()
 
     def test_strip_direct_html_assets_are_self_contained(self):

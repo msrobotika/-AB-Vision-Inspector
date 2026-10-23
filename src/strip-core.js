@@ -18,6 +18,8 @@
    const nominalMm=finite(Number(value.nominalMm),0.1,2000,'Ancho nominal');
    const toleranceMm=finite(Number(value.toleranceMm),0,100,'Tolerancia');
    const referenceMm=finite(Number(value.referenceMm),1,2000,'Referencia física en mm');
+   const calibrationMethod=value.calibrationMethod??'physical-markers';
+   if(!['physical-markers','belt-edges'].includes(calibrationMethod))err('Método de calibración desconocido');
    const distanceMm=finite(Number(value.distanceMm),1,100000,'Distancia nominal');
    const threshold=finite(Number(value.threshold),1,254,'Umbral');
    const minRunPx=finite(Number(value.minRunPx??8),3,500,'Mínimo de píxeles');
@@ -29,7 +31,7 @@
    if(roi.x<0||roi.y<0||roi.width<40||roi.height<40)err('La ROI debe ser mayor de 40 px');
    const id=String(value.id||'SIN-ID').slice(0,64);
    if(!/^[\p{L}\p{N}_. -]{1,64}$/u.test(id))err('Identificador de receta no válido');
-   return Object.freeze({schema:1,id,count,nominalMm,toleranceMm,referenceMm,distanceMm,
+   return Object.freeze({schema:1,id,count,nominalMm,toleranceMm,referenceMm,distanceMm,calibrationMethod,
      threshold,minRunPx,polarity,roi:{...roi}});
  }
  function validateImage(image){
@@ -135,7 +137,7 @@
  function evaluate(image,recipeInput,calibration,audit,baseline=null){
    const recipe=validateRecipe(recipeInput);
    const extracted=extractStrips(image,recipe);
-   if(!calibration||!audit||audit.status!=='VERIFIED')
+   if(!calibration||!audit||!['VERIFIED','BELT_EDGES_TRACKED'].includes(audit.status))
      return {...extracted,status:'INVALID',reason:audit?.reason||'Falta referencia física auditada',
        lanes:[],auditStatus:'INVALID'};
    if(calibration.imageWidth!==image.width||calibration.imageHeight!==image.height)
@@ -144,7 +146,7 @@
       Math.abs(calibration.workingDistanceMm-recipe.distanceMm)>1e-8)
      return {...extracted,status:'INVALID',reason:'Parámetros físicos modificados: recalibra',lanes:[],auditStatus:'INVALID'};
    if(extracted.status!=='DETECTED')
-     return {...extracted,auditStatus:'VERIFIED'};
+     return {...extracted,auditStatus:audit.status};
    const scale=finite(audit.mmPerPixel,.000001,100,'Escala auditada');
    const uncertainty=finite(audit.uncertaintyMm,0,500,'Incertidumbre indicativa');
    // Even a perfectly nominal width is NOT OK when the visual uncertainty overlaps limits.
@@ -165,7 +167,7 @@
    });
    return {status:lanes.some(l=>l.status==='NOK')?'NOK':
       lanes.every(l=>l.status==='OK')?'OK':'REVIEW',
-      auditStatus:'VERIFIED',reason:null,lanes,lines:extracted.lines,
+      auditStatus:audit.status,reason:null,lanes,lines:extracted.lines,
       detectedPerRow:extracted.detectedPerRow,mmPerPixel:scale,uncertaintyMm:uncertainty};
  }
  function makeBaseline(result,recipeInput){
