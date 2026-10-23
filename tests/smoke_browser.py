@@ -141,10 +141,20 @@ class BrowserSmoke(unittest.TestCase):
         page.locator("#strip-fault").click()
         self.assertEqual(page.locator("#strip-verdict").inner_text(),"NOK")
         self.assertIn("ALERTA",page.locator("#strip-message").inner_text())
+        page.locator("#strip-export-last-nok").wait_for(state="visible")
+        page.wait_for_function("() => !document.querySelector('#strip-export-last-nok').disabled")
+        with page.expect_download() as evidence:
+            page.locator("#strip-export-last-nok").click()
+        self.assertIn("AB-Vision-NOK-F",evidence.value.suggested_filename)
+        self.assertTrue(evidence.value.suggested_filename.endswith(".png"))
         page.screenshot(path=str(OUT/"vision-tiras-nok.png"),full_page=True)
         with page.expect_download() as d:
             page.locator("#strip-export-csv").click()
         self.assertTrue(d.value.suggested_filename.endswith(".csv"))
+        with open(d.value.path(), "r", encoding="utf-8") as result_csv:
+            csv_text=result_csv.read()
+        self.assertIn("strip1MinMm",csv_text)
+        self.assertIn("strip4MaxMm",csv_text)
         self.assertEqual(errors,[])
         page.close()
 
