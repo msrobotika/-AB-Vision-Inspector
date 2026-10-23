@@ -124,7 +124,7 @@
 
 <section class="strip-module" id="strips" aria-label="Control dimensional de tiras de goma">
   <header class="strip-heading"><div><span class="overline">04 / METROLOGÍA EN CONTINUO</span><h2>Tiras de goma · control de ancho</h2>
-  <p>Inspección cenital de 1–4 tiras sobre cinta, cámara USB o cámara IP JPEG/MJPEG autorizada. Trazabilidad local por tiempo y fotograma.</p></div>
+  <p>Inspección cenital de 1–4 tiras sobre cinta, con movimiento lateral/oscilación permitidos. La calidad depende de su anchura real perpendicular al recorrido, no de que permanezcan centradas en un píxel fijo. Cámara USB o IP autorizada; trazabilidad por tiempo y fotograma.</p></div>
   <span id="strip-status" class="strip-status" aria-live="polite">SIN RECETA CALIBRADA</span></header>
   <div class="strip-alert"><strong>Antes de medir:</strong> coloca dos marcas rígidas CIAN y MAGENTA, separadas una distancia física conocida en el plano de la goma y fuera de las tiras. Esta referencia se reconoce automáticamente y se <strong>audita en cada fotograma</strong>. La muestra solo sirve para aprender las zonas y anchuras iniciales; su ancho nominal no valida la escala. Sin referencia: <strong>SIN MEDICIÓN</strong>.</div>
   <div class="strip-grid">
@@ -146,6 +146,7 @@
         <button id="strip-once" type="button">▶ Medir fotograma</button>
         <button id="strip-run" type="button">⟳ Continuo: OFF</button>
         <button id="strip-fault" type="button">Simular variación de ancho</button>
+        <button id="strip-sway" type="button">Simular oscilación lateral: OFF</button>
       </div>
       <div class="strip-actions">
         <button id="strip-save" type="button">Guardar receta local</button>
@@ -528,8 +529,9 @@
    const recipe=validateRecipe(input);
    const roi=recipe.roi;
    if(roi.x+roi.width>image.width||roi.y+roi.height>image.height)err('ROI fuera del fotograma: recalibrar');
-   // Five cross-sections along travelling direction to detect narrowing/bulges.
-   const fractions=[.18,.34,.50,.66,.82],lines=[],rejections=[];
+   // Eleven transects track each strip through lateral oscillation along the belt.
+   // A fixed X position is NOT a quality criterion: only strip width is.
+   const fractions=[.10,.18,.26,.34,.42,.50,.58,.66,.74,.82,.90],lines=[],rejections=[];
    for(const f of fractions){
      const y=roi.y+Math.min(roi.height-1,Math.floor(f*roi.height));
      const segments=scanRow(image,roi,y,recipe);
@@ -542,15 +544,30 @@
      detectedPerRow:lines.map(l=>l.segments.length),lines,lanes:[]};
    const lanes=[];
    for(let i=0;i<recipe.count;i++){
+     // Within each scan row, the left-to-right order identifies the lane.
+     // Different rows and consecutive frames may have very different centers.
+     // That is expected in oscillating rubber; do not classify drift as NOK.
      const parts=lines.map(l=>l.segments[i]);
-     const widths=parts.map(p=>p.widthPx);
      const centers=parts.map(p=>(p.left+p.right)/2);
-     const center=Math.round(centers.reduce((a,b)=>a+b,0)/centers.length);
-     if(centers.some(c=>Math.abs(c-center)>Math.max(12,Math.min(...widths)*.35)))
-       return {status:'INVALID',reason:'Tiras cruzadas o desplazamiento transversal inesperado',
+     const ys=lines.map(l=>l.y);
+     const slopes=centers.map((_,j)=>{
+       const lo=Math.max(0,j-1),hi=Math.min(centers.length-1,j+1);
+       return (centers[hi]-centers[lo])/(ys[hi]-ys[lo]);
+     });
+     // Horizontal width overestimates true normal width for slanted strips.
+     // Locally correct the oblique cross-section using centerline tangent.
+     // Very steep/ambiguous contours are unmeasurable in this 2D model.
+     if(slopes.some(m=>!Number.isFinite(m)||Math.abs(m)>1))
+       return {status:'INVALID',reason:'Curvatura o inclinación excesiva para medir bordes con confianza',
          detectedPerRow:lines.map(l=>l.segments.length),lines,lanes:[]};
-     lanes.push({index:i+1,centerPx:center,meanPx:widths.reduce((a,b)=>a+b,0)/widths.length,
-       minPx:Math.min(...widths),maxPx:Math.max(...widths),rowWidthsPx:widths});
+     const widths=parts.map((p,j)=>p.widthPx/Math.hypot(1,slopes[j]));
+     const center=Math.round(centers.reduce((a,b)=>a+b,0)/centers.length);
+     lanes.push({index:i+1,centerPx:center,
+       lateralRangePx:Math.max(...centers)-Math.min(...centers),
+       meanPx:widths.reduce((a,b)=>a+b,0)/widths.length,
+       minPx:Math.min(...widths),maxPx:Math.max(...widths),
+       rowWidthsPx:widths,rawHorizontalWidthsPx:parts.map(p=>p.widthPx),
+       centerlinePx:centers,centerlineSlope:slopes});
    }
    return {status:'DETECTED',reason:null,lanes,lines,
      detectedPerRow:lines.map(l=>l.segments.length)};
@@ -578,11 +595,13 @@
      if(Math.max(devMin,devMax)+uncertainty<=recipe.toleranceMm)status='OK';
      else if(devMin-uncertainty>recipe.toleranceMm || devMax-uncertainty>recipe.toleranceMm)
        status='NOK';
-     if(baseline?.centers && baseline.centers.length===recipe.count &&
-        Math.abs(l.centerPx-baseline.centers[l.index-1])>Math.max(15,l.meanPx*.4))
-       status='REVIEW';
+     // Track lateral motion for diagnostics, NEVER for OK/NOK/REVIEW.
+     // A strip can sweep across the camera as long as its entire contour
+     // remains measurable inside the ROI and lanes remain separable.
+     const lateralShiftPx=baseline?.centers?.length===recipe.count
+       ? l.centerPx-baseline.centers[l.index-1] : null;
      return {...l,minMm,maxMm,meanMm,deltaMm:meanMm-recipe.nominalMm,
-       uncertaintyMm:uncertainty,status};
+       lateralShiftPx, uncertaintyMm:uncertainty,status};
    });
    return {status:lanes.some(l=>l.status==='NOK')?'NOK':
       lanes.every(l=>l.status==='OK')?'OK':'REVIEW',
@@ -982,7 +1001,7 @@ async function connectIp(){
 /** Dedicated rubber-strip lab: shares the camera/IP acquisition and source canvas.
  * No token, credentials, web write command or PLC access is exposed.
  */
-function stripDemo(count=4,offsetPx=0,reset=false){
+function stripDemo(count=4,offsetPx=0,reset=false,oscillationPx=0){
   if(reset){
     stopAuto();stopCamera();stopIp();invalidateCalibration('Nueva muestra de tiras demo');
   }
@@ -995,9 +1014,16 @@ function stripDemo(count=4,offsetPx=0,reset=false){
   sctx.strokeStyle='#dbe8dc';sctx.lineWidth=2;
   for(let y=100;y<570;y+=58){sctx.beginPath();sctx.moveTo(90,y);sctx.lineTo(1190,y);sctx.stroke();}
   centers.forEach((cx,i)=>{
-    const w=50+(i===Math.floor(count/2)?offsetPx:0);
-    sctx.fillStyle='#242a2e';sctx.fillRect(cx-w/2,100,w,450);
-    sctx.fillStyle='#44484b';sctx.fillRect(cx-w/2+4,100,2,450);
+    const normalW=50+(i===Math.floor(count/2)?offsetPx:0);
+    for(let y=100;y<550;y++){
+      // Lateral drift and sinusoidal sway are allowed; the known sample width
+      // is perpendicular to the local tangent, not to the camera's X axis.
+      const wave=oscillationPx===0?0:22*Math.sin((y-100)/95+cx/140);
+      const slope=oscillationPx===0?0:(22/95)*Math.cos((y-100)/95+cx/140);
+      const center=cx+oscillationPx+wave;
+      const horizontalW=normalW*Math.hypot(1,slope);
+      sctx.fillStyle='#242a2e';sctx.fillRect(center-horizontalW/2,y,horizontalW,1);
+    }
   });
   // Synthetic fiducials. Real installations require physical, fixed marks in the same plane.
   for(const [x,y,color] of [[100,649,'#13eddf'],[1100,649,'#f725ca']]){
@@ -1092,7 +1118,7 @@ const core=window.ABVisionCore, strips=window.ABStripCore,acq=window.ABVisionAcq
 if(!core||!strips||!acq)throw Error('Motor de medición de tiras no disponible');
 const src=$('source'),view=$('overlay');
 let calibration=null,baseline=null,active=false,timer=null,busy=false;
-let seq=0,history=[],demoFault=false;
+let seq=0,history=[],demoFault=false,demoOscillating=false;
 let liveRecipe=null;
 const memoryKey='abvision-strip-recipes-v1';
 const $txt=(id,value)=>$(id).textContent=String(value);
@@ -1299,7 +1325,8 @@ async function cycle(){
   busy=true;
   try{
     if(acq.isStripDemo()){
-      acq.demo(Number($('strip-count').value),demoFault?18:0,false);
+      acq.demo(Number($('strip-count').value),demoFault?18:0,false,
+        demoOscillating?Math.round(55*Math.sin((seq+1)*.55)):0);
     }else if(!acq.isLive() || !await acq.refresh()){
       state('INVALID','FUENTE DESCONECTADA');
       stop();note('Sin nuevos fotogramas. Lectura bloqueada y continuo detenido.',true);return;
@@ -1326,7 +1353,8 @@ function start(){
   timer=setTimeout(cycle,50);
 }
 function demo(){
-  stop();demoFault=false;
+  stop();demoFault=false;demoOscillating=false;
+  $('strip-sway').textContent='Simular oscilación lateral: OFF';
   acq.demo(Number($('strip-count').value),0,true);
   calibration=null;baseline=null;liveRecipe=null;
   state('INVALID','MUESTRA DEMO · CALIBRAR');
@@ -1351,8 +1379,18 @@ $('strip-run').addEventListener('click',start);
 $('strip-fault').addEventListener('click',()=>{
   if(!acq.isStripDemo()){note('La inyección de fallo solo existe en el laboratorio sintético.',true);return}
   demoFault=!demoFault;
-  acq.demo(Number($('strip-count').value),demoFault?18:0,false);
+  acq.demo(Number($('strip-count').value),demoFault?18:0,false,
+    demoOscillating?Math.round(55*Math.sin((seq+1)*.55)):0);
   note('Fallo de anchura sintético '+(demoFault?'ACTIVO':'DESACTIVADO')+'. Vuelve a medir.');
+  if(!active)measure();
+});
+$('strip-sway').addEventListener('click',()=>{
+  if(!acq.isStripDemo()){note('La simulación de oscilación solo está disponible en el laboratorio.',true);return;}
+  demoOscillating=!demoOscillating;
+  $('strip-sway').textContent='Simular oscilación lateral: '+(demoOscillating?'ON':'OFF');
+  acq.demo(Number($('strip-count').value),demoFault?18:0,false,
+    demoOscillating?55:0);
+  note('La oscilación transversal no es defecto. Solo habrá alerta si la anchura sale de tolerancia o se pierde la ROI.');
   if(!active)measure();
 });
 $('strip-save').addEventListener('click',saveRecipe);
