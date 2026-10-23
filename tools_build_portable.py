@@ -8,7 +8,11 @@ html=html.replace('<link rel="stylesheet" href="src/style.css">',
                   '<style>\n'+(ROOT/'src/style.css').read_text(encoding='utf-8')+'\n</style>')
 html=html.replace('<script src="src/vision-core.js" defer></script>','')
 html=html.replace('<script src="src/app.js" defer></script>','')
-js='\n'.join((ROOT/'src'/name).read_text(encoding='utf-8') for name in ('vision-core.js','app.js'))
+html=html.replace('<script src="src/strip-core.js" defer></script>','')
+html=html.replace('<script src="src/strip-ui.js" defer></script>','')
+html=html.replace('<link rel="stylesheet" href="src/strip.css">','')
+html=html.replace('</style>', '\n'+(ROOT/'src/strip.css').read_text(encoding='utf-8')+'</style>',1)
+js='\n'.join((ROOT/'src'/name).read_text(encoding='utf-8') for name in ('vision-core.js','strip-core.js','app.js','strip-ui.js'))
 html=html.replace('</body>','<script>\n'+js+'\n</script></body>')
 html=html.replace('AB-Vision Inspector — MS ROBOTIKA</title>','AB-Vision Inspector — MS ROBOTIKA · Sin instalación</title>')
 assert '<script src=' not in html and 'stylesheet' not in html
