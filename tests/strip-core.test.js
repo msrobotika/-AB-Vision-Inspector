@@ -95,3 +95,66 @@ test('referencia cambiada tras calibrar: bloqueo',()=>{
  const im=frame(),phys=cal(im);
  assert.equal(engine.evaluate(im,{...recipe(),referenceMm:210},phys.calibration,phys.audit).status,'INVALID');
 });
+
+function movingFrame(count=4, shift=0, tilt=0.0, normalWidth=50, wave=0){
+ const im=frame(count,0,true);
+ const centers={1:[640],2:[470,810],3:[340,640,940],4:[250,510,770,1030]}[count];
+ // Erase the straight synthetic strips from frame(); preserve fixed fiducials.
+ for(let y=100;y<550;y++)for(let x=110;x<1170;x++){
+   const p=(y*im.width+x)*4;im.data[p]=im.data[p+1]=im.data[p+2]=185;
+ }
+ for(const cx of centers)for(let y=100;y<550;y++){
+   const phase=(y-100)/95+cx/140;
+   const bend=wave*Math.sin(phase);
+   const slope=tilt+(wave/95)*Math.cos(phase);
+   const middle=cx+shift+tilt*(y-320)+bend;
+   const horizontalWidth=normalWidth*Math.hypot(1,slope);
+   const left=Math.ceil(middle-horizontalWidth/2),right=Math.floor(middle+horizontalWidth/2);
+   for(let x=left;x<=right;x++){
+     if(x<0||x>=im.width)continue;
+     const p=(y*im.width+x)*4;im.data[p]=36;im.data[p+1]=39;im.data[p+2]=43;
+   }
+ }
+ return im;
+}
+test('oscilación lateral izquierda/derecha NO altera veredicto cuando ancho es constante',()=>{
+ const initial=frame(4),physical=cal(initial),r=recipe(4);
+ const base=engine.makeBaseline(engine.evaluate(initial,r,physical.calibration,physical.audit),r);
+ for(const shift of [-70,-38,0,27,65]){
+  const now=movingFrame(4,shift,0,50,0);
+  const audit=vision.auditCameraFrame(now,physical.calibration,'camera:demo');
+  const result=engine.evaluate(now,r,physical.calibration,audit,base);
+  assert.equal(result.status,'OK','shift='+shift+' '+result.reason);
+  assert.equal(result.lanes.length,4);
+  assert.ok(result.lanes.some(l=>Math.abs(l.lateralShiftPx)>25)||shift===0);
+  assert.ok(result.lanes.every(l=>Math.abs(l.meanMm-10)<.21));
+ }
+});
+test('tira ondulante/oblicua: seguir el centro variable y medir ancho NORMAL, no horizontal',()=>{
+ const physical=cal(frame()),r=recipe(4);
+ const baseline=engine.makeBaseline(engine.evaluate(frame(),r,physical.calibration,physical.audit),r);
+ const moving=movingFrame(4,18,.27,50,22);
+ const audit=vision.auditCameraFrame(moving,physical.calibration,'camera:demo');
+ const result=engine.evaluate(moving,r,physical.calibration,audit,baseline);
+ assert.equal(result.status,'OK',result.reason);
+ assert.equal(result.lanes.length,4);
+ assert.ok(result.lanes.every(l=>l.lateralRangePx>30));
+ assert.ok(result.lanes.some(l=>l.rowWidthsPx.some((v,j)=>v < l.rawHorizontalWidthsPx[j]-0.3)));
+ assert.ok(result.lanes.every(l=>Math.abs(l.meanMm-10)<.35));
+});
+test('desplazamiento permitido pero estrechamiento real dispara NOK en la tira afectada',()=>{
+ const original=frame(),physical=cal(original),r=recipe();
+ const baseline=engine.makeBaseline(engine.evaluate(original,r,physical.calibration,physical.audit),r);
+ // One narrow synthetic strip with 32 px width and lateral oscillation.
+ const bad=movingFrame(4,-24,.20,32,15);
+ const audit=vision.auditCameraFrame(bad,physical.calibration,'camera:demo');
+ const out=engine.evaluate(bad,r,physical.calibration,audit,baseline);
+ assert.equal(out.status,'NOK');
+ assert.ok(out.lanes.every(l=>l.status==='NOK'));
+});
+test('si la tira oscilante abandona ROI la medida se bloquea, nunca queda OK',()=>{
+ const original=frame(),physical=cal(original);
+ const out=engine.evaluate(movingFrame(4,140,0,50),recipe(),physical.calibration,
+   vision.auditCameraFrame(original,physical.calibration,'camera:demo'));
+ assert.equal(out.status,'INVALID');
+});
