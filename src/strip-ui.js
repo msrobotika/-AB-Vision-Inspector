@@ -9,7 +9,7 @@ const core=window.ABVisionCore, strips=window.ABStripCore,acq=window.ABVisionAcq
 if(!core||!strips||!acq)throw Error('Motor de medición de tiras no disponible');
 const src=$('source'),view=$('overlay');
 let calibration=null,baseline=null,active=false,timer=null,busy=false;
-let seq=0,history=[],demoFault=false;
+let seq=0,history=[],demoFault=false,demoOscillating=false;
 let liveRecipe=null;
 const memoryKey='abvision-strip-recipes-v1';
 const $txt=(id,value)=>$(id).textContent=String(value);
@@ -216,7 +216,8 @@ async function cycle(){
   busy=true;
   try{
     if(acq.isStripDemo()){
-      acq.demo(Number($('strip-count').value),demoFault?18:0,false);
+      acq.demo(Number($('strip-count').value),demoFault?18:0,false,
+        demoOscillating?Math.round(55*Math.sin((seq+1)*.55)):0);
     }else if(!acq.isLive() || !await acq.refresh()){
       state('INVALID','FUENTE DESCONECTADA');
       stop();note('Sin nuevos fotogramas. Lectura bloqueada y continuo detenido.',true);return;
@@ -243,7 +244,8 @@ function start(){
   timer=setTimeout(cycle,50);
 }
 function demo(){
-  stop();demoFault=false;
+  stop();demoFault=false;demoOscillating=false;
+  $('strip-sway').textContent='Simular oscilación lateral: OFF';
   acq.demo(Number($('strip-count').value),0,true);
   calibration=null;baseline=null;liveRecipe=null;
   state('INVALID','MUESTRA DEMO · CALIBRAR');
@@ -268,8 +270,18 @@ $('strip-run').addEventListener('click',start);
 $('strip-fault').addEventListener('click',()=>{
   if(!acq.isStripDemo()){note('La inyección de fallo solo existe en el laboratorio sintético.',true);return}
   demoFault=!demoFault;
-  acq.demo(Number($('strip-count').value),demoFault?18:0,false);
+  acq.demo(Number($('strip-count').value),demoFault?18:0,false,
+    demoOscillating?Math.round(55*Math.sin((seq+1)*.55)):0);
   note('Fallo de anchura sintético '+(demoFault?'ACTIVO':'DESACTIVADO')+'. Vuelve a medir.');
+  if(!active)measure();
+});
+$('strip-sway').addEventListener('click',()=>{
+  if(!acq.isStripDemo()){note('La simulación de oscilación solo está disponible en el laboratorio.',true);return;}
+  demoOscillating=!demoOscillating;
+  $('strip-sway').textContent='Simular oscilación lateral: '+(demoOscillating?'ON':'OFF');
+  acq.demo(Number($('strip-count').value),demoFault?18:0,false,
+    demoOscillating?55:0);
+  note('La oscilación transversal no es defecto. Solo habrá alerta si la anchura sale de tolerancia o se pierde la ROI.');
   if(!active)measure();
 });
 $('strip-save').addEventListener('click',saveRecipe);
