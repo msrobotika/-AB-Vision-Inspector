@@ -135,7 +135,7 @@
  function evaluate(image,recipeInput,calibration,audit,baseline=null){
    const recipe=validateRecipe(recipeInput);
    const extracted=extractStrips(image,recipe);
-   if(!calibration||!audit||audit.status!=='VERIFIED')
+   if(!calibration||!audit||!['VERIFIED','BELT_EDGES_TRACKED'].includes(audit.status))
      return {...extracted,status:'INVALID',reason:audit?.reason||'Falta referencia física auditada',
        lanes:[],auditStatus:'INVALID'};
    if(calibration.imageWidth!==image.width||calibration.imageHeight!==image.height)
@@ -144,7 +144,7 @@
       Math.abs(calibration.workingDistanceMm-recipe.distanceMm)>1e-8)
      return {...extracted,status:'INVALID',reason:'Parámetros físicos modificados: recalibra',lanes:[],auditStatus:'INVALID'};
    if(extracted.status!=='DETECTED')
-     return {...extracted,auditStatus:'VERIFIED'};
+     return {...extracted,auditStatus:audit.status};
    const scale=finite(audit.mmPerPixel,.000001,100,'Escala auditada');
    const uncertainty=finite(audit.uncertaintyMm,0,500,'Incertidumbre indicativa');
    // Even a perfectly nominal width is NOT OK when the visual uncertainty overlaps limits.
@@ -165,7 +165,7 @@
    });
    return {status:lanes.some(l=>l.status==='NOK')?'NOK':
       lanes.every(l=>l.status==='OK')?'OK':'REVIEW',
-      auditStatus:'VERIFIED',reason:null,lanes,lines:extracted.lines,
+      auditStatus:audit.status,reason:null,lanes,lines:extracted.lines,
       detectedPerRow:extracted.detectedPerRow,mmPerPixel:scale,uncertaintyMm:uncertainty};
  }
  function makeBaseline(result,recipeInput){
