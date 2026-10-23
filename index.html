@@ -100,6 +100,7 @@
         <button id="strip-export-recipe" type="button">Exportar receta JSON</button>
         <label class="button file-button">Importar receta<input id="strip-import-recipe" type="file" accept=".json,application/json"></label>
         <button id="strip-export-csv" type="button">Exportar CSV de mediciones</button>
+        <button id="strip-export-last-nok" type="button" disabled title="Fotograma de la última medida NOK, guardado en memoria hasta cerrar la página">Descargar último NOK (PNG)</button>
         <button id="strip-export-png" type="button">Guardar imagen anotada</button>
       </div>
       <p class="small-muted"><strong>Montaje de la imagen:</strong> 3 tiras nominales de 50 mm, tolerancia ±2 mm, referencias a 100 mm centro–centro y altura cámara-plano de 800 mm. <strong>Ilustración, no imagen de medición a escala.</strong> Verifica con el visor que las tres tiras caben en el campo real. Los fiduciales deben estar a la altura de la superficie medida, no solo pegados a la cinta si la goma tiene espesor.</p>
@@ -114,7 +115,7 @@
     </div>
   </div>
   <div class="table-scroller"><table><thead><tr><th>HORA UTC</th><th>RECETA</th><th>FOTOGRAMA</th><th>ANCHOS T1 / T2 / T3 / T4 (mm)</th><th>DESVIACIÓN / VARIACIÓN</th><th>ESTADO</th><th>AUDITORÍA</th></tr></thead><tbody id="strip-history"><tr><td colspan="7">Sin mediciones. Los fotogramas se procesan localmente; no se archivan automáticamente.</td></tr></tbody></table></div>
-  <p class="small-muted">Histórico temporal limitado a 1000 muestras en memoria. Exporta CSV antes de cerrar. No es un historiador industrial ni proporciona rechazo de piezas o control de seguridad.</p>
+  <p class="small-muted">Histórico temporal limitado a 1000 muestras en memoria. El último resultado NOK conserva una captura anotada temporal descargable con número de fotograma; CSV añade mínimos/máximos por tira. Exporta ambos antes de cerrar. No es un historiador industrial ni proporciona rechazo de piezas o control de seguridad.</p>
 </section>
 <div class="metrics"><div class="metric"><span>RESULTADO DE INSPECCIÓN</span><strong id="verdict" class="pending">SIN ANALIZAR</strong><small id="duration">Esperando imagen</small></div><div class="metric"><span>DEFECTOS DETECTADOS</span><strong id="defects">—</strong><small>Componentes que superan el área mínima</small></div><div class="metric"><span>SUPERFICIE AFECTADA</span><strong id="coverage">—</strong><small>Porcentaje de la región inspeccionada</small></div><div class="metric"><span>ANCHO × ALTO (mm)</span><strong id="measured-size">SIN CALIBRAR</strong><small id="dimension-status">Sin metrología verificada</small></div><div class="metric"><span>INSPECCIONES EN SESIÓN</span><strong id="count">0</strong><small>Historial exportable a CSV</small></div></div>
 <section class="history-card" id="history"><div class="card-head"><div><span class="overline">03 / TRAZABILIDAD</span><h2>Registro de inspecciones</h2></div><div class="history-actions"><button id="save-png">Exportar imagen anotada</button><button id="export-csv">Exportar CSV</button><button id="export-json">Exportar JSON</button><button id="clear-history" class="destructive">Vaciar</button></div></div>
