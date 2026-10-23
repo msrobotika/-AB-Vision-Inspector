@@ -8,3 +8,7 @@ build/
 playwright-report/
 test-results/
 *.log
+
+# Suite Core local checkpoints
+.ab-vision-suite-checkpoint.json
+.ab-vision-suite-checkpoint.json.tmp
