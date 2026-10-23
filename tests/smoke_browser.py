@@ -196,5 +196,31 @@ class BrowserSmoke(unittest.TestCase):
         self.assertNotIn('href="src/strip.css"',content)
 
 
+    def test_fake_usb_webcam_acquisition_and_safe_metrology_block(self):
+        """Fake UVC camera is real getUserMedia acquisition, not a physical-calibration claim."""
+        browser=self.pw.chromium.launch(headless=True,args=[
+            "--no-sandbox","--use-fake-device-for-media-stream",
+            "--use-fake-ui-for-media-stream","--disable-dev-shm-usage"])
+        context=browser.new_context(permissions=["camera"])
+        page=context.new_page()
+        errors=[]
+        page.on("pageerror",lambda error: errors.append(str(error)))
+        try:
+            page.goto(self.url,wait_until="load")
+            page.locator("#camera-start").click()
+            page.wait_for_function("""() => document.querySelector('#capture').disabled===false
+                && document.querySelector('#camera-video').videoWidth>0""",timeout=9000)
+            page.locator("#capture").click()
+            self.assertIn("CÁMARA",page.locator("#source-label").inner_text())
+            page.locator("#strip-calibrate").click()
+            self.assertEqual(page.locator("#strip-verdict").inner_text(),"SIN MEDICIÓN")
+            self.assertIn("NO VALIDADA",page.locator("#strip-audit").inner_text())
+            page.screenshot(path=str(OUT/"vision-webcam-uvc-sin-patron.png"),full_page=True)
+            self.assertEqual(errors,[])
+        finally:
+            context.close()
+            browser.close()
+
+
 if __name__ == "__main__":
     unittest.main()
