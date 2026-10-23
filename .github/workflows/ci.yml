@@ -34,6 +34,7 @@ jobs:
       - name: Validar empaquetado HTML completamente portable
         run: |
           python tools_build_portable.py
+          git diff --exit-code -- AB-Vision-Inspector-PORTABLE.html
           python - <<'PY'
           from pathlib import Path
           html=Path('AB-Vision-Inspector-PORTABLE.html').read_text(encoding='utf-8')
