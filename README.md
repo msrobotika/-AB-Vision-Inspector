@@ -17,6 +17,16 @@ Aplicación original para inspeccionar imágenes y cámaras locales mediante umb
 
 El archivo [**AB-Vision-Inspector-PORTABLE.html**](AB-Vision-Inspector-PORTABLE.html) contiene HTML, estilos y motor JavaScript en una sola pieza. Ábrelo con doble clic: **importación de fotos, demostración y análisis funcionan sin Python ni red**. Para utilizar la cámara con permisos consistentes entre navegadores, es preferible la edición con servidor local indicada a continuación. El HTML se genera reproduciblemente ejecutando `python tools_build_portable.py` y no necesita bibliotecas externas.
 
+## Empezar con tu montaje: 3 tiras de 50 ±2 mm
+
+La aplicación ya permite **1 a 4 tiras, webcam USB y cámara IP JPEG/MJPEG**, pero todavía no está validada para producción. En el visor, pulsa **Montaje real de ejemplo: 3 × 50 ± 2 mm** para preparar una receta de 3 tiras, nominal 50 mm, tolerancia ±2 mm, marcadores separados 100 mm y altura nominal de 800 mm. **No se genera ninguna calibración válida al pulsar el botón**: primero debes conectar una cámara y medir físicamente la referencia.
+
+**Importante:** si esas distancias no caben en el campo de visión calculado en píxeles, el programa bloquea la calibración con un error explícito en lugar de forzar un OK. La imagen de ejemplo con flechas y textos es un **dibujo orientativo, no una imagen calibrable a escala**. La referencia debe ser coplanar con la superficie superior de goma, y los cambios de receta obligan a recalibrar.
+
+[**Guía del montaje cenital y comprobación de campo de visión**](docs/MONTAJE_CENITAL_3X50.md) · [**Descargar visor HTML portátil (Raw)**](https://raw.githubusercontent.com/msrobotika/-AB-Vision-Inspector/main/AB-Vision-Inspector-PORTABLE.html) · [**Repositorio de visor HTML**](AB-Vision-Inspector-PORTABLE.html).
+
+**Para activar una webcam con permisos fiables:** ejecuta `python serve.py` y abre su dirección `http://127.0.0.1:<puerto>/`. GitHub muestra el código fuente HTML y puede descargarlo; no significa que haya una demo pública Pages activa. La webcam desde HTML local (`file://`) depende del navegador. RTSP no está implementado.
+
 ## Nuevo laboratorio: medición continua de tiras de goma (piloto experimental)
 
 **Prueba inmediata con visor HTML:** [Descargar AB-Vision-Inspector-PORTABLE.html](https://github.com/msrobotika/-AB-Vision-Inspector/raw/refs/heads/main/AB-Vision-Inspector-PORTABLE.html). Guarda el archivo y ábrelo localmente en Chrome/Edge. En el panel **«Tiras de goma · control de ancho»**, elige entre **1, 2, 3 o 4 tiras**, pulsa **«Cinta demo (1–4)»** y después **«Detectar patrón y calibrar muestra»**. Verás las anchuras por tira en mm y estado OK. Pulsa **«Simular variación de ancho»** para provocar NOK y exporta el CSV.
