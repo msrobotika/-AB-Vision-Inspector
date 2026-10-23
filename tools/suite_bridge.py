@@ -15,8 +15,15 @@ from pathlib import Path
 import re
 import sys
 from urllib.error import HTTPError, URLError
-from urllib.request import Request, urlopen
+from urllib.request import Request, build_opener, HTTPRedirectHandler
 
+class RejectRedirect(HTTPRedirectHandler):
+    """Do not forward Bearer credentials to redirected URLs."""
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+OPENER = build_opener(RejectRedirect)
 SCHEMA = "msrobotika.suite.event.v1"
 LOCAL_URL = re.compile(r"^http://127\.0\.0\.1:([0-9]{1,5})$")
 MAX_BYTES = 8 * 1024 * 1024
@@ -141,7 +148,7 @@ def publish_events(events: list[dict], *, url: str, token: str,
                      "Content-Type": "application/json"},
             data=json.dumps(event, ensure_ascii=False, allow_nan=False).encode("utf-8")
         )
-        with urlopen(request, timeout=8) as response:
+        with OPENER.open(request, timeout=8) as response:
             if response.status != 201:
                 raise RuntimeError("El servidor no confirmó la publicación HTTP 201")
         done.add(event["trace_id"])

@@ -1,6 +1,7 @@
 """AB-Vision native inspection history → Suite Core contract tests."""
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from urllib.error import HTTPError
 import json
 import tempfile
 import threading
@@ -54,6 +55,30 @@ class TestSuiteVision(unittest.TestCase):
             p.write_text('{"schema":999,"records":[]}', encoding="utf-8")
             with self.assertRaises(ValueError):
                 read_history(p)
+    def test_http_redirect_is_rejected_without_forwarding_token(self):
+        class Handler(BaseHTTPRequestHandler):
+            def do_POST(self):
+                self.send_response(302)
+                self.send_header("Location", "https://example.invalid/collect-token")
+                self.send_header("Content-Length", "0")
+                self.end_headers()
+            def log_message(self, *args):
+                pass
+        server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            with tempfile.TemporaryDirectory() as folder:
+                with self.assertRaises(HTTPError) as error:
+                    publish_events([event_for_record(record(), 0)],
+                        url=f"http://127.0.0.1:{server.server_address[1]}",
+                        token="a" * 64, checkpoint=Path(folder) / "cursor.json")
+                self.assertEqual(error.exception.code, 302)
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join(timeout=5)
+
     def test_remote_hosts_rejected(self):
         with self.assertRaises(ValueError):
             loopback_url("http://192.168.0.9:4175")
