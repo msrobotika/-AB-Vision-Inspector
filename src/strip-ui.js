@@ -53,6 +53,17 @@ function loadRecipe(recipe){
   $txt('strip-audit','La receta no contiene calibración activa; verifica marcas físicas');
   note('Receta cargada: selecciona ROI si cambió el encuadre, comprueba patrón y calibra de nuevo.');
 }
+function loadPhysicalExample(){
+  // An installation preset is NOT a camera calibration, nor synthetic proof.
+  // It does not switch away from an already connected USB/IP camera.
+  const example={id:'GOMA-3X50-L01',count:3,nominalMm:50,toleranceMm:2,
+    referenceMm:100,distanceMm:800,polarity:'dark',threshold:95,
+    minRunPx:8,roi:defaultRoi()};
+  loadRecipe(example);
+  note('Ejemplo 3 tiras × 50 ±2 mm, marcas físicas a 100 mm y cámara a 800 mm. '+
+    'NO es una calibración: usa imagen REAL, marcas en el plano de la goma, '+
+    'comprueba ancho disponible y patrón físico independiente antes de medir.');
+}
 function loadSaved(){
   try{
     const data=JSON.parse(localStorage.getItem(memoryKey)||'{}');
@@ -192,6 +203,8 @@ async function calibrate(){
     const marks=strips.findReferenceMarkers(frame);
     // The independent known-distance marks are checked by the existing v0.3 audit engine.
     const cal=core.createAuditedCalibration(frame,marks,r.referenceMm,r.distanceMm,acq.getSourceId());
+    const geometry=strips.assessFieldOfView(r,cal.referencePixels,frame.width);
+    if(geometry.status!=='POSSIBLE')throw Error(geometry.reason);
     const audit=core.auditCameraFrame(frame,cal,acq.getSourceId());
     if(audit.status!=='VERIFIED')throw Error(audit.reason);
     const result=strips.evaluate(frame,r,cal,audit);
@@ -261,6 +274,7 @@ function changed(){
   $txt('strip-scale','RECALIBRAR');$txt('strip-audit','Receta modificada: calibra de nuevo');
   note('Parámetro cambiado. Calibración y muestra previas invalidadas.',true);
 }
+$('strip-example-3x50').addEventListener('click',loadPhysicalExample);
 $('strip-demo').addEventListener('click',demo);
 $('strip-calibrate').addEventListener('click',calibrate);
 $('strip-once').addEventListener('click',async()=>{
