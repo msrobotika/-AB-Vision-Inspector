@@ -380,7 +380,7 @@ async function connectIp(){
 /** Dedicated rubber-strip lab: shares the camera/IP acquisition and source canvas.
  * No token, credentials, web write command or PLC access is exposed.
  */
-function stripDemo(count=4,offsetPx=0,reset=false){
+function stripDemo(count=4,offsetPx=0,reset=false,oscillationPx=0){
   if(reset){
     stopAuto();stopCamera();stopIp();invalidateCalibration('Nueva muestra de tiras demo');
   }
@@ -393,9 +393,16 @@ function stripDemo(count=4,offsetPx=0,reset=false){
   sctx.strokeStyle='#dbe8dc';sctx.lineWidth=2;
   for(let y=100;y<570;y+=58){sctx.beginPath();sctx.moveTo(90,y);sctx.lineTo(1190,y);sctx.stroke();}
   centers.forEach((cx,i)=>{
-    const w=50+(i===Math.floor(count/2)?offsetPx:0);
-    sctx.fillStyle='#242a2e';sctx.fillRect(cx-w/2,100,w,450);
-    sctx.fillStyle='#44484b';sctx.fillRect(cx-w/2+4,100,2,450);
+    const normalW=50+(i===Math.floor(count/2)?offsetPx:0);
+    for(let y=100;y<550;y++){
+      // Lateral drift and sinusoidal sway are allowed; the known sample width
+      // is perpendicular to the local tangent, not to the camera's X axis.
+      const wave=oscillationPx===0?0:22*Math.sin((y-100)/95+cx/140);
+      const slope=oscillationPx===0?0:(22/95)*Math.cos((y-100)/95+cx/140);
+      const center=cx+oscillationPx+wave;
+      const horizontalW=normalW*Math.hypot(1,slope);
+      sctx.fillStyle='#242a2e';sctx.fillRect(center-horizontalW/2,y,horizontalW,1);
+    }
   });
   // Synthetic fiducials. Real installations require physical, fixed marks in the same plane.
   for(const [x,y,color] of [[100,649,'#13eddf'],[1100,649,'#f725ca']]){
