@@ -116,12 +116,14 @@ function csv(value){
 function exportCsv(){
   const columns=['timestampUTC','recipe','frame','source','status','audit','reason',
     'strip1Mm','strip2Mm','strip3Mm','strip4Mm','strip1Status','strip2Status',
-    'strip3Status','strip4Status','scaleMmPerPixel','uncertaintyMm'];
+    'strip3Status','strip4Status','lateralShiftT1Px','lateralShiftT2Px',
+    'lateralShiftT3Px','lateralShiftT4Px','scaleMmPerPixel','uncertaintyMm'];
   const rows=[columns.map(csv).join(',')];
   for(const entry of history){
     const vals=[entry.at,entry.recipe,entry.frame,entry.source,entry.status,entry.audit,entry.reason,
       ...[0,1,2,3].map(i=>entry.lanes[i]?.meanMm??''),
       ...[0,1,2,3].map(i=>entry.lanes[i]?.status??''),
+      ...[0,1,2,3].map(i=>entry.lanes[i]?.lateralShiftPx??''),
       entry.mmPerPixel??'',entry.uncertaintyMm??''];
     rows.push(vals.map(csv).join(','));
   }
