@@ -27,8 +27,8 @@ jobs:
           cp favicon.svg _site/
           cp src/style.css src/strip.css src/vision-core.js src/strip-core.js src/app.js src/strip-ui.js _site/src/
           cp AB-Vision-Inspector-PORTABLE.html _site/
-          if grep -nE 'src="/api/|https?://192\\.168\\.|password.*=' _site/index.html; then
-            echo 'Unexpected private dependency in public page'
+          if grep -nE '<script[^>]+src="https?://' _site/index.html; then
+            echo 'Unexpected remote JavaScript dependency in public page'
             exit 1
           fi
           test ! -e _site/serve.py
