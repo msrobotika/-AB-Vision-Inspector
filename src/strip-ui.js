@@ -11,6 +11,7 @@ const src=$('source'),view=$('overlay');
 let calibration=null,baseline=null,active=false,timer=null,busy=false;
 let seq=0,history=[],demoFault=false,demoOscillating=false;
 let liveRecipe=null;
+let lastNokEvidence=null; // one annotated capture in RAM only; never uploads
 const memoryKey='abvision-strip-recipes-v1';
 const $txt=(id,value)=>$(id).textContent=String(value);
 const note=(message,error=false)=>{$txt('strip-message',message);$('strip-message').classList.toggle('error',error)};
@@ -128,14 +129,18 @@ function exportCsv(){
   const columns=['timestampUTC','recipe','frame','source','status','audit','reason',
     'strip1Mm','strip2Mm','strip3Mm','strip4Mm','strip1Status','strip2Status',
     'strip3Status','strip4Status','lateralShiftT1Px','lateralShiftT2Px',
-    'lateralShiftT3Px','lateralShiftT4Px','scaleMmPerPixel','uncertaintyMm'];
+    'lateralShiftT3Px','lateralShiftT4Px','scaleMmPerPixel','uncertaintyMm',
+    'strip1MinMm','strip2MinMm','strip3MinMm','strip4MinMm',
+    'strip1MaxMm','strip2MaxMm','strip3MaxMm','strip4MaxMm'];
   const rows=[columns.map(csv).join(',')];
   for(const entry of history){
     const vals=[entry.at,entry.recipe,entry.frame,entry.source,entry.status,entry.audit,entry.reason,
       ...[0,1,2,3].map(i=>entry.lanes[i]?.meanMm??''),
       ...[0,1,2,3].map(i=>entry.lanes[i]?.status??''),
       ...[0,1,2,3].map(i=>entry.lanes[i]?.lateralShiftPx??''),
-      entry.mmPerPixel??'',entry.uncertaintyMm??''];
+      entry.mmPerPixel??'',entry.uncertaintyMm??'',
+      ...[0,1,2,3].map(i=>entry.lanes[i]?.minMm??''),
+      ...[0,1,2,3].map(i=>entry.lanes[i]?.maxMm??'')];
     rows.push(vals.map(csv).join(','));
   }
   download('AB-Vision-tiras-traza-'+new Date().toISOString().slice(0,10)+'.csv',
@@ -164,6 +169,21 @@ function trace(result,recipe,origin){
   history.push(record);if(history.length>1000)history.shift();
   $txt('strip-samples',history.length);
   renderHistory();
+  return record;
+}
+function retainLastNok(record){
+  // Snapshot the current ANNOTATED canvas synchronously so future frames cannot
+  // overwrite the failure evidence before the browser finishes encoding.
+  const copy=document.createElement('canvas');
+  copy.width=view.width;copy.height=view.height;
+  copy.getContext('2d').drawImage(view,0,0);
+  const identity=record.frame;
+  copy.toBlob(blob=>{
+    if(!blob||blob.size<100)return;
+    lastNokEvidence={blob,record};
+    $('strip-export-last-nok').disabled=false;
+    $('strip-export-last-nok').textContent='Descargar NOK · fotograma '+identity;
+  },'image/png');
 }
 function formatLanes(lanes){
   return lanes?.length ? lanes.map(l=>'T'+l.index+': '+l.meanMm.toFixed(2)+' mm ('+l.status+')').join(' · ') : '—';
@@ -187,7 +207,10 @@ function measure({store=true}={}){
   $txt('strip-scale',audit.status==='VERIFIED'?audit.mmPerPixel.toFixed(5)+' mm/px':'ESCALA NO VALIDADA');
   $txt('strip-widths',formatLanes(result.lanes));
   acq.setOverlay(result.lanes);
-  if(store)trace(result,recipe,acq.isStripDemo()?'DEMO_SINTETICA':acq.isLive()?'CAMARA_LIVE':'IMAGEN_ESTATICA');
+  if(store){
+    const record=trace(result,recipe,acq.isStripDemo()?'DEMO_SINTETICA':acq.isLive()?'CAMARA_LIVE':'IMAGEN_ESTATICA');
+    if(result.status==='NOK')retainLastNok(record);
+  }
   if(result.status==='INVALID')note('Lectura bloqueada: '+result.reason,true);
   else if(result.status==='NOK')note('ALERTA: ancho fuera del margen en al menos una tira (inspección visual, NO control automático).',true);
   else if(result.status==='REVIEW')note('REVISAR: la incertidumbre, el desplazamiento o el borde pueden afectar el veredicto.');
@@ -307,6 +330,16 @@ $('strip-saved').addEventListener('change',()=>{
 $('strip-export-recipe').addEventListener('click',exportRecipe);
 $('strip-import-recipe').addEventListener('change',importRecipe);
 $('strip-export-csv').addEventListener('click',exportCsv);
+$('strip-export-last-nok').addEventListener('click',()=>{
+  const image=lastNokEvidence;
+  if(!image){note('Todavía no se ha capturado ningún NOK válido.',true);return}
+  const timestamp=image.record.at.replaceAll(':','-').replaceAll('.','-');
+  download('AB-Vision-NOK-F'+image.record.frame+'-'+timestamp+'.png',
+    image.blob,'image/png');
+  note('Imagen anotada NOK exportada · fotograma '+image.record.frame+
+    '. Exporta también el CSV para conservar receta, hora, mín/máx y estado. No existe archivo automático persistente.');
+});
+
 $('strip-export-png').addEventListener('click',()=>{
   if(!acq.getFrame()){note('No hay imagen para guardar',true);return}
   const canvas=$('overlay');canvas.toBlob(blob=>{
