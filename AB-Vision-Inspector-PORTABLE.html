@@ -26,6 +26,7 @@
 .audit-bad{background:#492a29;color:#ffd1a2}
 
 
+
 /* 1–4 strip width inspection · local industrial lab, scoped styles */
 .strip-module{border:1px solid #356b69;border-radius:13px;background:linear-gradient(145deg,#101f2a,#12232f);margin:24px 0;padding:24px;box-shadow:0 12px 40px #06101a50}
 .strip-heading{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}
@@ -56,6 +57,15 @@
 @media(max-width:1250px){.strip-fields{grid-template-columns:repeat(2,minmax(125px,1fr))}}
 @media(max-width:850px){.strip-grid{grid-template-columns:1fr}.strip-results{grid-template-columns:repeat(2,minmax(0,1fr))}.strip-heading{flex-direction:column}.strip-status{white-space:normal}}
 @media(max-width:480px){.strip-module{padding:13px;margin:18px 0}.strip-fields{grid-template-columns:1fr 1fr;gap:8px}.strip-results{grid-template-columns:1fr 1fr}.strip-heading h2{font-size:19px}.strip-actions select{max-width:100%}}
+
+/* Virtual guides overlay on the actual camera raster; no marks written to the image. */
+.viewer{position:relative}
+#strip-guides-layer{position:absolute;inset:0;width:100%;height:100%;z-index:3;
+  pointer-events:none;touch-action:none}
+#strip-guides-layer.marking{pointer-events:auto;cursor:crosshair}
+#strip-guide-help{border-left:3px solid #49afbf;padding-left:12px}
+#strip-guides:not([hidden]){border-color:#388da8;color:#9ae7ff}
+#strip-guides[hidden]{display:none}
 </style>
 </head>
 <body>
@@ -71,7 +81,7 @@
 <div class="notice-rail"><span class="notice-icon">ⓘ</span><div><strong>Modo de laboratorio.</strong> El resultado OK/NOK es orientativo. Esta versión no está validada para seguridad, rechazo automático de piezas ni control de maquinaria.</div></div>
 <div class="main-grid">
 <section class="work-card" id="vision"><div class="card-head"><div><span class="overline">01 / ÁREA DE VISIÓN</span><h2>Inspección de imagen</h2></div><span class="live-status" id="feed-status">● SIN FUENTE</span></div>
-  <div class="viewer"><canvas id="overlay" width="1280" height="720" aria-label="Área de inspección: arrastra para seleccionar región de interés"></canvas><video id="camera-video" autoplay muted playsinline hidden></video><div class="viewer-status"><span id="source-label">Imagen de demostración</span><span id="image-size">1280 × 720</span></div><div class="viewer-corner tl"></div><div class="viewer-corner tr"></div><div class="viewer-corner bl"></div><div class="viewer-corner br"></div></div>
+  <div class="viewer"><canvas id="overlay" width="1280" height="720" aria-label="Área de inspección: arrastra para seleccionar región de interés"></canvas><video id="camera-video" autoplay muted playsinline hidden></video><canvas id="strip-guides-layer" aria-label="Guías virtuales de los bordes reales de la cinta"></canvas><div class="viewer-status"><span id="source-label">Imagen de demostración</span><span id="image-size">1280 × 720</span></div><div class="viewer-corner tl"></div><div class="viewer-corner tr"></div><div class="viewer-corner bl"></div><div class="viewer-corner br"></div></div>
   <div class="tool-bar"><button id="demo" class="primary">◈ Cargar demostración</button><label class="button file-button">↑ Abrir imagen<input id="image-file" type="file" accept="image/png,image/jpeg,image/webp,image/bmp"></label><button id="camera-start">◉ Iniciar cámara</button><button id="capture" disabled>◎ Capturar</button><button id="camera-stop" disabled>■ Detener</button></div>
 
   <div class="connect-panels">
@@ -126,7 +136,7 @@
   <header class="strip-heading"><div><span class="overline">04 / METROLOGÍA EN CONTINUO</span><h2>Tiras de goma · control de ancho</h2>
   <p>Inspección cenital de 1–4 tiras sobre cinta, con movimiento lateral/oscilación permitidos. La calidad depende de su anchura real perpendicular al recorrido, no de que permanezcan centradas en un píxel fijo. Cámara USB o IP autorizada; trazabilidad por tiempo y fotograma.</p></div>
   <span id="strip-status" class="strip-status" aria-live="polite">SIN RECETA CALIBRADA</span></header>
-  <div class="strip-alert"><strong>Antes de medir:</strong> coloca dos marcas rígidas CIAN y MAGENTA, separadas una distancia física conocida en el plano de la goma y fuera de las tiras. Esta referencia se reconoce automáticamente y se <strong>audita en cada fotograma</strong>. La muestra solo sirve para aprender las zonas y anchuras iniciales; su ancho nominal no valida la escala. Sin referencia: <strong>SIN MEDICIÓN</strong>.</div>
+  <div class="strip-alert"><strong>Dos métodos de referencia:</strong> puedes usar marcas físicas de color o <strong>dibujar dos guías virtuales sobre los bordes reales visibles de la cinta</strong>, sin pegar nada a la goma. Introduce la anchura de la cinta medida independientemente. Las líneas dibujadas solo existen en el visor: <strong>la cámara no las ve</strong>. Sin bordes reconocibles o con escala inestable: <strong>SIN MEDICIÓN</strong>. Esta segunda modalidad es orientativa, no calibración metrológica acreditada.</div>
   <div class="strip-grid">
     <div class="strip-settings">
       <div class="strip-fields">
@@ -134,15 +144,15 @@
         <label>Número de tiras<select id="strip-count"><option value="1">1 tira</option><option value="2">2 tiras</option><option value="3">3 tiras</option><option value="4" selected>4 tiras</option></select></label>
         <label>Ancho nominal por tira (mm)<input id="strip-nominal" type="number" min=".1" max="2000" step=".01" value="10"></label>
         <label>Tolerancia ± (mm)<input id="strip-tolerance" type="number" min="0" max="100" step=".01" value="1.5"></label>
-        <label>Separación real entre marcas (mm)<input id="strip-reference" type="number" min="1" max="2000" step=".01" value="200"></label>
+        <label>Calibrar tomando<select id="strip-method"><option value="belt-edges">Bordes reales de la cinta + guías virtuales</option><option value="physical-markers" selected>Dos fiduciales CIAN/MAGENTA</option></select></label><label><span id="strip-reference-label">Separación real entre marcas (mm)</span><input id="strip-reference" type="number" min="1" max="2000" step=".01" value="200"></label>
         <label>Distancia cámara al plano (mm)<input id="strip-distance" type="number" min="1" max="100000" value="500"></label>
         <label>Tiras sobre fondo<select id="strip-polarity"><option value="dark" selected>Oscuras / cinta clara</option><option value="light">Claras / cinta oscura</option></select></label>
         <label>Umbral de luminancia (0–255)<input id="strip-threshold" type="number" min="1" max="254" step="1" value="95"></label>
       </div>
-      <p class="small-muted">Si la cámara está en ángulo, tiene distorsión no corregida, pierde foco, cambia de altura o los bordes no contrastan, se debe detener y volver a verificar. El posicionamiento longitudinal requiere encoder: aquí se guarda fecha/hora, no metros fabricados.</p>
+      <p class="small-muted">Si la cámara está en ángulo, tiene distorsión no corregida, pierde foco, cambia de altura o los bordes no contrastan, se debe detener y volver a verificar. El posicionamiento longitudinal requiere encoder: aquí se guarda fecha/hora, no metros fabricados.</p><p id="strip-guide-help" class="small-muted">Método fiduciales: mantén dos marcas en el plano de medida. Método de guías virtuales: pulsa «Marcar dos bordes», señala primero IZQUIERDO y luego DERECHO en el visor, a la misma altura, sobre bordes físicos visibles, e introduce su distancia real. La anchura nominal de la goma solo es tolerancia de inspección.</p>
       <div class="strip-actions">
         <button id="strip-demo" type="button">◈ Cinta demo (1–4)</button>
-        <button id="strip-calibrate" type="button" class="primary">⊙ Detectar patrón y calibrar muestra</button>
+        <button id="strip-guides" type="button">⌖ Marcar dos bordes en visor</button><button id="strip-calibrate" type="button" class="primary">⊙ Detectar referencia y calibrar muestra</button>
         <button id="strip-once" type="button">▶ Medir fotograma</button>
         <button id="strip-run" type="button">⟳ Continuo: OFF</button>
         <button id="strip-fault" type="button">Simular variación de ancho</button>
@@ -458,6 +468,8 @@
    const nominalMm=finite(Number(value.nominalMm),0.1,2000,'Ancho nominal');
    const toleranceMm=finite(Number(value.toleranceMm),0,100,'Tolerancia');
    const referenceMm=finite(Number(value.referenceMm),1,2000,'Referencia física en mm');
+   const calibrationMethod=value.calibrationMethod??'physical-markers';
+   if(!['physical-markers','belt-edges'].includes(calibrationMethod))err('Método de calibración desconocido');
    const distanceMm=finite(Number(value.distanceMm),1,100000,'Distancia nominal');
    const threshold=finite(Number(value.threshold),1,254,'Umbral');
    const minRunPx=finite(Number(value.minRunPx??8),3,500,'Mínimo de píxeles');
@@ -469,7 +481,7 @@
    if(roi.x<0||roi.y<0||roi.width<40||roi.height<40)err('La ROI debe ser mayor de 40 px');
    const id=String(value.id||'SIN-ID').slice(0,64);
    if(!/^[\p{L}\p{N}_. -]{1,64}$/u.test(id))err('Identificador de receta no válido');
-   return Object.freeze({schema:1,id,count,nominalMm,toleranceMm,referenceMm,distanceMm,
+   return Object.freeze({schema:1,id,count,nominalMm,toleranceMm,referenceMm,distanceMm,calibrationMethod,
      threshold,minRunPx,polarity,roi:{...roi}});
  }
  function validateImage(image){
@@ -575,7 +587,7 @@
  function evaluate(image,recipeInput,calibration,audit,baseline=null){
    const recipe=validateRecipe(recipeInput);
    const extracted=extractStrips(image,recipe);
-   if(!calibration||!audit||audit.status!=='VERIFIED')
+   if(!calibration||!audit||!['VERIFIED','BELT_EDGES_TRACKED'].includes(audit.status))
      return {...extracted,status:'INVALID',reason:audit?.reason||'Falta referencia física auditada',
        lanes:[],auditStatus:'INVALID'};
    if(calibration.imageWidth!==image.width||calibration.imageHeight!==image.height)
@@ -584,7 +596,7 @@
       Math.abs(calibration.workingDistanceMm-recipe.distanceMm)>1e-8)
      return {...extracted,status:'INVALID',reason:'Parámetros físicos modificados: recalibra',lanes:[],auditStatus:'INVALID'};
    if(extracted.status!=='DETECTED')
-     return {...extracted,auditStatus:'VERIFIED'};
+     return {...extracted,auditStatus:audit.status};
    const scale=finite(audit.mmPerPixel,.000001,100,'Escala auditada');
    const uncertainty=finite(audit.uncertaintyMm,0,500,'Incertidumbre indicativa');
    // Even a perfectly nominal width is NOT OK when the visual uncertainty overlaps limits.
@@ -605,7 +617,7 @@
    });
    return {status:lanes.some(l=>l.status==='NOK')?'NOK':
       lanes.every(l=>l.status==='OK')?'OK':'REVIEW',
-      auditStatus:'VERIFIED',reason:null,lanes,lines:extracted.lines,
+      auditStatus:audit.status,reason:null,lanes,lines:extracted.lines,
       detectedPerRow:extracted.detectedPerRow,mmPerPixel:scale,uncertaintyMm:uncertainty};
  }
  function makeBaseline(result,recipeInput){
@@ -617,6 +629,125 @@
      widthsAtSampleMm:result.lanes.map(l=>l.meanMm)});
  }
  return Object.freeze({validateRecipe,findReferenceMarkers,extractStrips,evaluate,makeBaseline});
+});
+
+/* SPDX-License-Identifier: MIT · MS ROBOTIKA
+ * Virtual guide lines are a user interface. Pixel-to-mm scale comes ONLY
+ * from the measured physical conveyor width between actual visible edges.
+ * Edge tracking is not accredited lens/perspective metrology.
+ */
+(function(root,factory){
+  const lib=factory();
+  if(typeof module==='object'&&module.exports)module.exports=lib;
+  if(root)root.ABBeltEdgeCalibration=lib;
+})(typeof window!=='undefined'?window:typeof globalThis!=='undefined'?globalThis:null,function(){
+'use strict';
+const error=msg=>{throw new RangeError(msg)};
+const bounded=(v,min,max,label)=>{
+  if(typeof v!=='number'||!Number.isFinite(v)||v<min||v>max)error(label+' inválido');
+  return v;
+};
+function validateFrame(frame){
+  if(!frame||!Number.isInteger(frame.width)||!Number.isInteger(frame.height)||
+     frame.width<200||frame.height<120||frame.width*frame.height>4_000_000||
+     !frame.data||frame.data.length!==frame.width*frame.height*4)
+    error('Fotograma o resolución incompatible');
+}
+const intensity=(frame,x,y)=>{
+  const p=(y*frame.width+x)*4,d=frame.data;
+  return (77*d[p]+150*d[p+1]+29*d[p+2])/256;
+};
+function edgeAt(frame,x,y,search=18){
+  let best=null,second=null;
+  const mid=Math.round(x),W=frame.width;
+  for(let xx=Math.max(6,mid-search);xx<=Math.min(W-7,mid+search);xx++){
+    let left=0,right=0;
+    for(let k=1;k<=3;k++){
+      left+=intensity(frame,xx-k,y);
+      right+=intensity(frame,xx+k,y);
+    }
+    const gradient=Math.abs(right-left)/3;
+    if(!best||gradient>best.gradient){
+      second=best;best={x:xx,gradient};
+    }else if(!second||gradient>second.gradient)second={x:xx,gradient};
+  }
+  if(!best||best.gradient<11)return null;
+  return best;
+}
+function detectEdges(frame,guideX,roi,search=18){
+  validateFrame(frame);
+  const y0=Math.max(8,roi.y),y1=Math.min(frame.height-9,roi.y+roi.height);
+  if(y1-y0<120)error('Zona de cinta demasiado pequeña para verificar bordes');
+  const xs=[],strengths=[];
+  for(let i=0;i<9;i++){
+    const y=Math.round(y0+(i+.5)/9*(y1-y0));
+    const detected=edgeAt(frame,guideX,y,search);
+    if(detected){xs.push(detected.x);strengths.push(detected.gradient)}
+  }
+  if(xs.length<7)error('Borde de cinta no distinguible de su entorno (luz/contraste)');
+  xs.sort((a,b)=>a-b);
+  const median=xs[Math.floor(xs.length/2)];
+  const maxSpread=Math.max(...xs)-Math.min(...xs);
+  if(maxSpread>9)error('Borde irregular, fuera de foco o con perspectiva/obstáculos');
+  return {x:median,jitterPx:maxSpread/2,
+    strength:strengths.reduce((a,b)=>a+b,0)/strengths.length,
+    supportingRows:xs.length};
+}
+/**
+ * A user clicks LEFT and RIGHT virtual lines over real physical belt edges;
+ * knows physical width (not nominal product). Auto-snap edges and check 9 rows.
+ */
+function create(frame,points,widthMm,distanceMm,sourceId,roi){
+  validateFrame(frame);
+  const mm=bounded(Number(widthMm),5,5000,'Ancho físico de cinta en milímetros');
+  const distance=bounded(Number(distanceMm),1,100000,'Distancia a plano');
+  if(!Array.isArray(points)||points.length!==2)error('Marca dos bordes reales en el visor');
+  const [left,right]=points;
+  if(![left.x,left.y,right.x,right.y].every(Number.isFinite))error('Guías inválidas');
+  if(left.x>=right.x || right.x-left.x<100)error('Referencia demasiado pequeña o guías invertidas');
+  if(Math.abs(left.y-right.y)>frame.height*.08)
+    error('Marca los dos bordes sobre la misma línea horizontal');
+  if(!roi||!['x','y','width','height'].every(k=>Number.isFinite(roi[k])))
+    error('ROI de inspección requerida');
+  const l=detectEdges(frame,left.x,roi),r=detectEdges(frame,right.x,roi);
+  const distancePx=r.x-l.x;
+  if(distancePx<100)error('Distancia en imagen demasiado corta');
+  const scale=mm/distancePx;
+  // At least two-pixel boundary ambiguity; indicative, not a verified MSA.
+  const pixelUncertainty=Math.max(2,Math.hypot(l.jitterPx,r.jitterPx)+1);
+  return Object.freeze({kind:'BELT_EDGES',referenceType:'BELT_WIDTH',
+    referenceMm:mm,workingDistanceMm:distance,
+    imageWidth:frame.width,imageHeight:frame.height,sourceId:String(sourceId),
+    xLeft:l.x,xRight:r.x,referencePx:distancePx,
+    mmPerPixel:scale,uncertaintyMm:pixelUncertainty*scale,
+    referenceRoi:{x:roi.x,y:roi.y,width:roi.width,height:roi.height},
+    createdAt:new Date().toISOString()});
+}
+function audit(frame,cal,sourceId){
+  function invalid(reason){return {status:'INVALID',reason,referenceType:'BELT_WIDTH'};}
+  try{
+    validateFrame(frame);
+    if(!cal||cal.kind!=='BELT_EDGES')return invalid('Falta calibración de bordes');
+    if(frame.width!==cal.imageWidth||frame.height!==cal.imageHeight)
+      return invalid('Resolución cambiada; recalibrar');
+    if(String(sourceId)!==cal.sourceId)
+      return invalid('Fuente de cámara modificada; recalibrar');
+    const l=detectEdges(frame,cal.xLeft,cal.referenceRoi,16);
+    const r=detectEdges(frame,cal.xRight,cal.referenceRoi,16);
+    const px=r.x-l.x;
+    const driftPercent=100*(px/cal.referencePx-1);
+    const movementPx=Math.max(Math.abs(l.x-cal.xLeft),Math.abs(r.x-cal.xRight));
+    if(px<100 || Math.abs(driftPercent)>1.5 || movementPx>7)
+      return invalid('Referencia se ha desplazado o ha cambiado su escala; bloqueada');
+    const scale=cal.referenceMm/px;
+    const uncertaintyMm=Math.max(2,Math.hypot(l.jitterPx,r.jitterPx)+1)*scale;
+    return {status:'BELT_EDGES_TRACKED',referenceType:'BELT_WIDTH',
+      mmPerPixel:scale,uncertaintyMm,scaleDriftPercent:driftPercent,
+      xLeft:l.x,xRight:r.x,workingDistanceMm:cal.workingDistanceMm,
+      reason:'Solo referencia natural de bordes; pendiente verificación metrológica'};
+  }catch(ex){return invalid(ex.message||'No se distinguen bordes físicos de cinta')}
+}
+return Object.freeze({create,audit,detectEdges});
 });
 
 /* SPDX-License-Identifier: MIT
@@ -1115,11 +1246,74 @@ init();
 'use strict';
 const $=id=>document.getElementById(id);
 const core=window.ABVisionCore, strips=window.ABStripCore,acq=window.ABVisionAcquisition;
-if(!core||!strips||!acq)throw Error('Motor de medición de tiras no disponible');
+const belt=window.ABBeltEdgeCalibration;
+if(!core||!strips||!acq||!belt)throw Error('Motor de medición de tiras no disponible');
 const src=$('source'),view=$('overlay');
 let calibration=null,baseline=null,active=false,timer=null,busy=false;
 let seq=0,history=[],demoFault=false,demoOscillating=false;
 let liveRecipe=null;
+let guidePoints=[],guidePicking=false;
+const guideLayer=$('strip-guides-layer'),guideContext=guideLayer.getContext('2d');
+function isBelt(){return $('strip-method').value==='belt-edges'}
+function guideOverlay(){
+  if(!src.width||!src.height)return;
+  if(guideLayer.width!==src.width)guideLayer.width=src.width;
+  if(guideLayer.height!==src.height)guideLayer.height=src.height;
+  guideContext.clearRect(0,0,guideLayer.width,guideLayer.height);
+  let points=guidePoints;
+  if(calibration?.kind==='BELT_EDGES')points=[
+    {x:calibration.xLeft,y:Math.floor(src.height/2)},
+    {x:calibration.xRight,y:Math.floor(src.height/2)}
+  ];
+  guideContext.save();guideContext.lineWidth=Math.max(2,src.width/600);
+  guideContext.setLineDash([10,7]);
+  points.forEach((p,i)=>{
+    guideContext.strokeStyle=i===0?'#46d4fb':'#ff8add';
+    guideContext.fillStyle=i===0?'#46d4fb':'#ff8add';
+    guideContext.beginPath();guideContext.moveTo(p.x,0);
+    guideContext.lineTo(p.x,src.height);guideContext.stroke();
+    guideContext.setLineDash([]);
+    guideContext.fillRect(p.x+5,Math.max(4,p.y-27),95,25);
+    guideContext.fillStyle='#101e2a';guideContext.font='bold 17px sans-serif';
+    guideContext.fillText(i===0?'IZQUIERDA':'DERECHA',p.x+9,Math.max(21,p.y-8));
+    guideContext.setLineDash([10,7]);
+  });
+  guideContext.restore();
+}
+function pickGuide(e){
+  if(!guidePicking)return;
+  const rect=guideLayer.getBoundingClientRect();
+  const x=Math.round((e.clientX-rect.left)*src.width/rect.width);
+  const y=Math.round((e.clientY-rect.top)*src.height/rect.height);
+  if(!Number.isFinite(x)||!Number.isFinite(y))return;
+  guidePoints.push({x,y});guideOverlay();
+  if(guidePoints.length===2){
+    guidePicking=false;guideLayer.classList.remove('marking');
+    if(guidePoints[0].x>guidePoints[1].x){
+      guidePoints=[];guideOverlay();
+      note('Selecciona primero el borde IZQUIERDO y luego el DERECHO',true);return;
+    }
+    note('Dos guías marcadas sobre la imagen. Introduce anchura real y pulsa «Detectar referencia y calibrar muestra».');
+  }else note('Borde izquierdo marcado. Ahora pulsa sobre el BORDE DERECHO a la misma altura.');
+}
+guideLayer.addEventListener('pointerdown',pickGuide);
+function startPicking(){
+  if(!acq.getFrame()){note('Primero abre webcam/IP, una imagen o Cinta demo',true);return;}
+  stop();calibration=null;baseline=null;liveRecipe=null;
+  guidePoints=[];guidePicking=true;guideLayer.classList.add('marking');
+  $('strip-method').value='belt-edges';methodChanged();
+  note('Sobre el visor superior, pulsa el BORDE IZQUIERDO REAL de la cinta (no el de una tira).');
+  $('strip-guides').textContent='⌖ Marcas virtuales: seleccionando';
+  guideOverlay();
+}
+function methodChanged(){
+  const active=isBelt();
+  $('strip-reference-label').textContent=active?'Anchura física de cinta, medida (mm)':'Separación real entre marcas (mm)';
+  $('strip-guides').hidden=!active;
+  $('strip-guide-help').textContent=active?
+    '1. Activa la cámara o demo. 2. Marca en el visor los bordes IZQUIERDO y DERECHO de la cinta, a igual altura. 3. Escribe la anchura real comprobada. 4. Calibra. No dibujes líneas en la propia goma.':
+    'Con las referencias físicas CIAN/MAGENTA visibles, pulsa Detectar referencia; se auditarán en cada fotograma.';
+}
 const memoryKey='abvision-strip-recipes-v1';
 const $txt=(id,value)=>$(id).textContent=String(value);
 const note=(message,error=false)=>{$txt('strip-message',message);$('strip-message').classList.toggle('error',error)};
@@ -1141,6 +1335,7 @@ function fields(){
     id:$('strip-id').value,count:Number($('strip-count').value),
     nominalMm:Number($('strip-nominal').value),toleranceMm:Number($('strip-tolerance').value),
     referenceMm:Number($('strip-reference').value),distanceMm:Number($('strip-distance').value),
+    calibrationMethod:$('strip-method').value,
     polarity:$('strip-polarity').value,threshold:Number($('strip-threshold').value),
     minRunPx:8,roi:defaultRoi()
   });
@@ -1151,16 +1346,18 @@ function loadRecipe(recipe){
     ['strip-id',valid.id],['strip-count',valid.count],
     ['strip-nominal',valid.nominalMm],['strip-tolerance',valid.toleranceMm],
     ['strip-reference',valid.referenceMm],['strip-distance',valid.distanceMm],
+    ['strip-method',valid.calibrationMethod],
     ['strip-polarity',valid.polarity],['strip-threshold',valid.threshold]
   ])$(id).value=value;
   calibration=null;baseline=null;liveRecipe=null;
-  stop();
+  guidePoints=[];guidePicking=false;guideLayer.classList.remove('marking');
+  guideOverlay();methodChanged();stop();
   try{acq.setRoi(valid.roi)}
   catch{note('ROI guardada no coincide con resolución de cámara: selecciona de nuevo la región.',true)}
   state('INVALID','RECETA CARGADA · RECALIBRAR');
   $txt('strip-scale','SIN CALIBRAR');
-  $txt('strip-audit','La receta no contiene calibración activa; verifica marcas físicas');
-  note('Receta cargada: selecciona ROI si cambió el encuadre, comprueba patrón y calibra de nuevo.');
+  $txt('strip-audit','La receta no conserva una escala válida; vuelve a verificar el patrón físico o los bordes naturales');
+  note('Receta cargada: selecciona ROI si cambió el encuadre, vuelve a marcar los dos bordes o verifica fiduciales, y calibra.');
 }
 function loadSaved(){
   try{
@@ -1226,14 +1423,14 @@ function exportCsv(){
   const columns=['timestampUTC','recipe','frame','source','status','audit','reason',
     'strip1Mm','strip2Mm','strip3Mm','strip4Mm','strip1Status','strip2Status',
     'strip3Status','strip4Status','lateralShiftT1Px','lateralShiftT2Px',
-    'lateralShiftT3Px','lateralShiftT4Px','scaleMmPerPixel','uncertaintyMm'];
+    'lateralShiftT3Px','lateralShiftT4Px','scaleMmPerPixel','uncertaintyMm','calibrationMethod'];
   const rows=[columns.map(csv).join(',')];
   for(const entry of history){
     const vals=[entry.at,entry.recipe,entry.frame,entry.source,entry.status,entry.audit,entry.reason,
       ...[0,1,2,3].map(i=>entry.lanes[i]?.meanMm??''),
       ...[0,1,2,3].map(i=>entry.lanes[i]?.status??''),
       ...[0,1,2,3].map(i=>entry.lanes[i]?.lateralShiftPx??''),
-      entry.mmPerPixel??'',entry.uncertaintyMm??''];
+      entry.mmPerPixel??'',entry.uncertaintyMm??'',entry.method??''];
     rows.push(vals.map(csv).join(','));
   }
   download('AB-Vision-tiras-traza-'+new Date().toISOString().slice(0,10)+'.csv',
@@ -1258,7 +1455,8 @@ function trace(result,recipe,origin){
   const record={at:new Date().toISOString(),recipe:recipe.id,frame:seq,
     source:origin,status:result.status,audit:result.auditStatus||'INVALID',
     reason:result.reason||'',lanes:result.lanes||[],
-    mmPerPixel:result.mmPerPixel??null,uncertaintyMm:result.uncertaintyMm??null};
+    mmPerPixel:result.mmPerPixel??null,uncertaintyMm:result.uncertaintyMm??null,
+    method:calibration?.kind==='BELT_EDGES'?'BELT_WIDTH_VISUAL':'FIDUCIALS'};
   history.push(record);if(history.length>1000)history.shift();
   $txt('strip-samples',history.length);
   renderHistory();
@@ -1274,15 +1472,19 @@ function measure({store=true}={}){
   }
   const frame=acq.getFrame();
   if(!frame){state('INVALID','SIN FOTOGRAMA');return null;}
-  const audit=core.auditCameraFrame(frame,calibration,acq.getSourceId());
+  const audit=calibration.kind==='BELT_EDGES'?
+    belt.audit(frame,calibration,acq.getSourceId()):
+    core.auditCameraFrame(frame,calibration,acq.getSourceId());
   let result;
   try{result=strips.evaluate(frame,recipe,calibration,audit,baseline)}
   catch(error){result={status:'INVALID',reason:error.message,lanes:[],auditStatus:'INVALID'}}
   state(result.status,result.status==='INVALID'?'SIN MEDICIÓN · BLOQUEADO':result.status+' · '+recipe.count+' TIRAS');
-  $txt('strip-audit',audit.status==='VERIFIED'?
-    'VERIFICADA EN ESTE FOTOGRAMA · incertidumbre indicativa ±'+audit.uncertaintyMm.toFixed(3)+' mm':
+  $txt('strip-audit',audit.status==='BELT_EDGES_TRACKED'?
+    'BORDES FÍSICOS VIGILADOS · estimación SIN acreditación ±'+audit.uncertaintyMm.toFixed(3)+' mm':
+    audit.status==='VERIFIED'?'FIDUCIALES DETECTADOS · incertidumbre indicativa ±'+audit.uncertaintyMm.toFixed(3)+' mm':
     'NO VALIDADA · '+audit.reason);
-  $txt('strip-scale',audit.status==='VERIFIED'?audit.mmPerPixel.toFixed(5)+' mm/px':'ESCALA NO VALIDADA');
+  $txt('strip-scale',['VERIFIED','BELT_EDGES_TRACKED'].includes(audit.status)?audit.mmPerPixel.toFixed(5)+' mm/px':'ESCALA NO VALIDADA');
+  guideOverlay();
   $txt('strip-widths',formatLanes(result.lanes));
   acq.setOverlay(result.lanes);
   if(store)trace(result,recipe,acq.isStripDemo()?'DEMO_SINTETICA':acq.isLive()?'CAMARA_LIVE':'IMAGEN_ESTATICA');
@@ -1298,22 +1500,33 @@ async function calibrate(){
     const frame=acq.getFrame();
     if(!frame)throw Error('Primero activa webcam/IP o carga una muestra');
     const r=fields();
-    const marks=strips.findReferenceMarkers(frame);
-    // The independent known-distance marks are checked by the existing v0.3 audit engine.
-    const cal=core.createAuditedCalibration(frame,marks,r.referenceMm,r.distanceMm,acq.getSourceId());
-    const audit=core.auditCameraFrame(frame,cal,acq.getSourceId());
-    if(audit.status!=='VERIFIED')throw Error(audit.reason);
+    const usingBelt=r.calibrationMethod==='belt-edges';
+    let cal,audit;
+    if(usingBelt){
+      if(guidePoints.length!==2)throw Error('Marca los bordes reales de cinta con dos guías virtuales');
+      cal=belt.create(frame,guidePoints,r.referenceMm,r.distanceMm,acq.getSourceId(),r.roi);
+      audit=belt.audit(frame,cal,acq.getSourceId());
+      if(audit.status!=='BELT_EDGES_TRACKED')throw Error(audit.reason);
+    }else{
+      const marks=strips.findReferenceMarkers(frame);
+      cal=core.createAuditedCalibration(frame,marks,r.referenceMm,r.distanceMm,acq.getSourceId());
+      audit=core.auditCameraFrame(frame,cal,acq.getSourceId());
+      if(audit.status!=='VERIFIED')throw Error(audit.reason);
+    }
     const result=strips.evaluate(frame,r,cal,audit);
     if(!result.lanes||result.lanes.length!==r.count)
       throw Error(result.reason||'No se identificaron 1–4 tiras completas en todas las filas');
     const base=strips.makeBaseline(result,r);
     calibration=cal;baseline=base;liveRecipe=r;
     $txt('strip-scale',audit.mmPerPixel.toFixed(5)+' mm/px');
-    $txt('strip-audit','VERIFICADA · marcadores fijos presentes en la captura');
+    $txt('strip-audit',usingBelt?
+      'BORDES FÍSICOS DETECTADOS · estimación sin acreditación metrológica':
+      'FIDUCIALES DETECTADOS · marcas fijas en la captura');
+    guideOverlay();
     state(result.status,'CALIBRADA · '+r.count+' TIRAS');
     $txt('strip-widths',formatLanes(result.lanes));
     acq.setOverlay(result.lanes);
-    note('Patrón encontrado automáticamente; '+r.count+' tira(s) detectadas. Anchuras de muestra '+base.widthsAtSampleMm.map(v=>v.toFixed(2)).join(' / ')+' mm. La tolerancia se evalúa frente al ancho NOMINAL, no se fuerza por esta muestra.');
+    note((usingBelt?'Dos bordes naturales de cinta localizados; escala orientativa. ':'Patrón físico encontrado. ')+r.count+' tira(s) detectadas. Anchuras de muestra '+base.widthsAtSampleMm.map(v=>v.toFixed(2)).join(' / ')+' mm. La tolerancia se evalúa frente al ancho NOMINAL, no se fuerza por esta muestra.');
     trace(result,r,acq.isStripDemo()?'DEMO_SINTETICA':acq.isLive()?'CAMARA_LIVE':'IMAGEN_ESTATICA');
   }catch(e){
     calibration=null;baseline=null;liveRecipe=null;
@@ -1348,7 +1561,7 @@ function stop(){
 }
 function start(){
   if(active){stop();note('Inspección continua detenida. Exporta el CSV si necesitas conservar trazabilidad.');return}
-  if(!calibration||!baseline||!liveRecipe){note('Primero detecta las marcas y calibra la muestra.',true);return}
+  if(!calibration||!baseline||!liveRecipe){note('Primero calibra con bordes de cinta o fiduciales.',true);return}
   if(!acq.isStripDemo()&&!acq.isLive()){note('El continuo requiere cámara USB/IP activa o demo, no una foto fija.',true);return}
   acq.stopDefectAuto();active=true;$('strip-run').textContent='■ Detener continuo';
   note('Seguimiento temporal a ~1 fotograma/s. Sin encoder no mide metros recorridos.');
@@ -1359,18 +1572,26 @@ function demo(){
   $('strip-sway').textContent='Simular oscilación lateral: OFF';
   acq.demo(Number($('strip-count').value),0,true);
   calibration=null;baseline=null;liveRecipe=null;
+  guidePoints=[];guidePicking=false;guideLayer.classList.remove('marking');guideOverlay();
   state('INVALID','MUESTRA DEMO · CALIBRAR');
   $txt('strip-scale','SIN CALIBRAR');
-  note('Cinta sintética cargada: patrón físico SIMULADO cian/magenta, pulsa «Detectar patrón y calibrar muestra».');
+  note('Cinta sintética cargada. Usa fiduciales simulados o elige Bordes de cinta y marca sus bordes reales visibles en el visor.');
 }
 function changed(){
   if(!calibration&&!baseline)return;
   stop();calibration=null;baseline=null;liveRecipe=null;
   state('INVALID','PARÁMETROS MODIFICADOS');
+  guideOverlay();
   $txt('strip-scale','RECALIBRAR');$txt('strip-audit','Receta modificada: calibra de nuevo');
   note('Parámetro cambiado. Calibración y muestra previas invalidadas.',true);
 }
 $('strip-demo').addEventListener('click',demo);
+$('strip-guides').addEventListener('click',startPicking);
+$('strip-method').addEventListener('change',()=>{
+  guidePicking=false;guideLayer.classList.remove('marking');guidePoints=[];
+  $('strip-guides').textContent='⌖ Marcar dos bordes en visor';
+  changed();methodChanged();guideOverlay();
+});
 $('strip-calibrate').addEventListener('click',calibrate);
 $('strip-once').addEventListener('click',async()=>{
   if(acq.isLive()&&!await acq.refresh()){note('No hay fotograma actual',true);return}
@@ -1413,7 +1634,7 @@ for(const id of ['strip-id','strip-count','strip-nominal','strip-tolerance',
   $(id).addEventListener('change',changed);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)stop()});
 window.addEventListener('pagehide',stop);
-refreshSelect();
+methodChanged();refreshSelect();
 })();
 
 </script></body></html>
