@@ -99,3 +99,8 @@ Código, algoritmo de componentes, ilustración de demostración, diseño, estil
 **MIT no garantiza ausencia de derechos de terceros, patentes o litigios.** Una publicación comercial debería pasar revisión jurídica y auditoría de licencias. Este código se preparó con asistencia de IA, que debe revisarse por el titular antes de una distribución comercial.
 
 Copyright © 2026 MS ROBOTIKA. [Licencia MIT](LICENSE).
+## Resultados de inspección hacia AB-Suite Core
+
+Nuestro nuevo adaptador Python tools/suite_bridge.py publica eventos de calidad a partir del historial JSON que exporta el programa, sin replicar el motor de visión. Omite fuentes, IP, credenciales e imágenes; conserva estados de auditoría y medidas seleccionadas. Una medición no auditada nunca se publica como resultado metrológico OK.
+
+[Instrucciones y límites](docs/SUITE_CORE.md). No es streaming directo ni controla maquinaria.
