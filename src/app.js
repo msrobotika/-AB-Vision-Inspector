@@ -411,6 +411,13 @@ window.ABVisionAcquisition=Object.freeze({
   getFrame:()=>imageReady?getFrame():null,
   getSourceId:()=>sourceIdentity(),
   getRoi:()=>roi?{x:roi.x,y:roi.y,width:roi.width,height:roi.height}:null,
+  setRoi:next=>{
+    const rect=core.clampRect(next,source.width,source.height);
+    if(rect.x!==next.x||rect.y!==next.y||rect.width!==next.width||rect.height!==next.height)
+      throw new RangeError('ROI guardada no coincide con resolución actual');
+    roi=rect;$('roi-label').textContent='ROI de receta · '+rect.width+' × '+rect.height;
+    renderPicture(lastAnalysis);
+  },
   isLive:()=>Boolean(stream||ipActive),
   isStripDemo:()=>lastSource==='strip-demo',
   stopDefectAuto:stopAuto,
