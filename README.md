@@ -27,6 +27,12 @@ La aplicación ya permite **1 a 4 tiras, webcam USB y cámara IP JPEG/MJPEG**, p
 
 **Para activar una webcam con permisos fiables:** ejecuta `python serve.py` y abre su dirección `http://127.0.0.1:<puerto>/`. GitHub muestra el código fuente HTML y puede descargarlo; no significa que haya una demo pública Pages activa. La webcam desde HTML local (`file://`) depende del navegador. RTSP no está implementado.
 
+### ¿Por qué GitHub no muestra un visor HTML interactivo al abrir el archivo?
+
+El enlace **Blob/Raw** es una descarga del HTML, no un hosting de la aplicación. Ya existe la acción de publicación de **demo estática** en [deploy-demo-pages.yml](.github/workflows/deploy-demo-pages.yml), pero necesita que el propietario habilite GitHub Pages manualmente: **Settings → Pages → Build and deployment → Source: GitHub Actions**, luego **Actions → Publish browser-only Vision demo (manual, owner approval) → Run workflow (main)**. No anunciar la URL como accesible hasta que termine la acción y se compruebe en navegador.
+
+La página estática puede pedir permiso de webcam por HTTPS; **no incluye el servidor Python ni su puente de cámara IP**. Para cámaras IP usa localhost según la guía. No publicar credenciales, direcciones OT ni capturas reales de planta en GitHub Pages.
+
 ## Nuevo laboratorio: medición continua de tiras de goma (piloto experimental)
 
 **Prueba inmediata con visor HTML:** [Descargar AB-Vision-Inspector-PORTABLE.html](https://github.com/msrobotika/-AB-Vision-Inspector/raw/refs/heads/main/AB-Vision-Inspector-PORTABLE.html). Guarda el archivo y ábrelo localmente en Chrome/Edge. En el panel **«Tiras de goma · control de ancho»**, elige entre **1, 2, 3 o 4 tiras**, pulsa **«Cinta demo (1–4)»** y después **«Detectar patrón y calibrar muestra»**. Verás las anchuras por tira en mm y estado OK. Pulsa **«Simular variación de ancho»** para provocar NOK y exporta el CSV.
