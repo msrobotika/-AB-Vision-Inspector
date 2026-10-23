@@ -17,6 +17,26 @@ Aplicación original para inspeccionar imágenes y cámaras locales mediante umb
 
 El archivo [**AB-Vision-Inspector-PORTABLE.html**](AB-Vision-Inspector-PORTABLE.html) contiene HTML, estilos y motor JavaScript en una sola pieza. Ábrelo con doble clic: **importación de fotos, demostración y análisis funcionan sin Python ni red**. Para utilizar la cámara con permisos consistentes entre navegadores, es preferible la edición con servidor local indicada a continuación. El HTML se genera reproduciblemente ejecutando `python tools_build_portable.py` y no necesita bibliotecas externas.
 
+## Nuevo laboratorio: medición continua de tiras de goma (piloto experimental)
+
+**Prueba inmediata con visor HTML:** [Descargar AB-Vision-Inspector-PORTABLE.html](https://github.com/msrobotika/-AB-Vision-Inspector/raw/refs/heads/main/AB-Vision-Inspector-PORTABLE.html). Guarda el archivo y ábrelo localmente en Chrome/Edge. En el panel **«Tiras de goma · control de ancho»**, elige entre **1, 2, 3 o 4 tiras**, pulsa **«Cinta demo (1–4)»** y después **«Detectar patrón y calibrar muestra»**. Verás las anchuras por tira en mm y estado OK. Pulsa **«Simular variación de ancho»** para provocar NOK y exporta el CSV.
+
+> La imagen inicial es sintética. No hay cámara física ni certificación dimensional en esta demostración. En el archivo HTML local pueden estar limitados los permisos de cámara según el navegador. Para la **webcam USB/cámara por cable**, utiliza preferentemente \`python serve.py\` y el botón «Iniciar cámara» en \`http://127.0.0.1\`. Para **cámara IP** utiliza el panel JPEG/MJPEG con autorización expresa, dirección IPv4 privada y el servidor Python; RTSP no se reproduce directamente en HTML.
+
+### Montaje cenital sobre cinta transportadora
+
+1. Fija la cámara y la iluminación con rigidez. Centra las 1–4 tiras en el campo visual, sin solapamientos; la anchura se mide horizontalmente y la cinta avanza en vertical en la imagen. Si avanza en otro sentido, orienta físicamente la cámara o la imagen antes de calibrar.
+2. Sitúa **dos fiduciales físicos visibles CIAN y MAGENTA** junto a las tiras, **en el mismo plano de medición**, con distancia **centro a centro medida independientemente**. Introduce esta longitud en mm, distancia cámara-plano real, ancho nominal y tolerancia ± fijada por laboratorio/químicos.
+3. Conecta cámara USB (getUserMedia en localhost) o IP JPEG/MJPEG privada. Selecciona la ROI arrastrando en el visor si es necesario y ajusta el contraste «tiras oscuras sobre cinta clara» o al contrario. Pulsa **«Detectar patrón y calibrar muestra»**: reconoce automáticamente los dos marcadores, calcula escala mm/píxel, aprende la posición de los carriles y mide la anchura de la primera muestra.
+4. Pulsa **«Continuo: ON»**: aproximadamente un fotograma/s, con medición de cinco cortes transversales por tira. Se comprueban **de nuevo ambos marcadores** en cada imagen y se compara mínimo/máximo/medio con ancho nominal y tolerancia por tira. Estados **OK, NOK, REVISAR, SIN MEDICIÓN**. Variaciones de escala/foco/posición, falta de referencia, número incorrecto de tiras o ROI cortada bloquean el resultado dimensional.
+5. **Guardar receta local** permite recuperar producto, número de tiras, ancho, tolerancia, umbral, contraste y ROI; también importar/exportar JSON. **No se conserva una calibración válida tras cargar receta**: hay que verificar de nuevo los marcadores. Descarga CSV de fechas UTC y medidas, o PNG anotado manual. Hasta 1000 lecturas en RAM; no es un historiador persistente.
+
+**Límite metrológico:** el ancho nominal de la muestra no permite calibrar y verificar esa misma anchura de forma independiente. La referencia física resuelve la escala; aun así faltan corrección intrínseca de lente, perspectiva/homografía, MSA Gage R&R y contraste con patrones trazables de distintos anchos. La incertidumbre indicada en software es orientativa (centroides + bordes), **no acreditada**. Sin encoder no se calcula longitud real ni metraje defectuoso, solo serie temporal. Sin ensayos físicos no automatizar rechazo ni usar como señal de seguridad.
+
+**Limitación de red:** cámara IP HTTP/HTTPS JPEG/MJPEG por acceso local a IPv4 privada validada. Una cámara IP solo RTSP/ONVIF requiere un puente seguro autorizado adicional (no implementado). No se abre acceso a Internet, no se almacenan contraseñas en recetas y ninguna operación escribe en PLC.
+
+El piloto tiene pruebas automatizadas de 1–4 tiras, ensanchamiento, incertidumbre y pérdida de patrón, y pruebas Chromium del visor portable. [Estado y protocolo de la prueba](docs/STRIP_METROLOGY_PILOT.md).
+
 ## Arranque sencillo
 
 - Windows: descomprime el proyecto y abre `AB-Vision-Inspector.bat` (requiere Python 3.11 o superior).
