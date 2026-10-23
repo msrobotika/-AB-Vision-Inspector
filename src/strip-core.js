@@ -89,8 +89,9 @@
    const recipe=validateRecipe(input);
    const roi=recipe.roi;
    if(roi.x+roi.width>image.width||roi.y+roi.height>image.height)err('ROI fuera del fotograma: recalibrar');
-   // Five cross-sections along travelling direction to detect narrowing/bulges.
-   const fractions=[.18,.34,.50,.66,.82],lines=[],rejections=[];
+   // Eleven transects track each strip through lateral oscillation along the belt.
+   // A fixed X position is NOT a quality criterion: only strip width is.
+   const fractions=[.10,.18,.26,.34,.42,.50,.58,.66,.74,.82,.90],lines=[],rejections=[];
    for(const f of fractions){
      const y=roi.y+Math.min(roi.height-1,Math.floor(f*roi.height));
      const segments=scanRow(image,roi,y,recipe);
@@ -103,15 +104,30 @@
      detectedPerRow:lines.map(l=>l.segments.length),lines,lanes:[]};
    const lanes=[];
    for(let i=0;i<recipe.count;i++){
+     // Within each scan row, the left-to-right order identifies the lane.
+     // Different rows and consecutive frames may have very different centers.
+     // That is expected in oscillating rubber; do not classify drift as NOK.
      const parts=lines.map(l=>l.segments[i]);
-     const widths=parts.map(p=>p.widthPx);
      const centers=parts.map(p=>(p.left+p.right)/2);
-     const center=Math.round(centers.reduce((a,b)=>a+b,0)/centers.length);
-     if(centers.some(c=>Math.abs(c-center)>Math.max(12,Math.min(...widths)*.35)))
-       return {status:'INVALID',reason:'Tiras cruzadas o desplazamiento transversal inesperado',
+     const ys=lines.map(l=>l.y);
+     const slopes=centers.map((_,j)=>{
+       const lo=Math.max(0,j-1),hi=Math.min(centers.length-1,j+1);
+       return (centers[hi]-centers[lo])/(ys[hi]-ys[lo]);
+     });
+     // Horizontal width overestimates true normal width for slanted strips.
+     // Locally correct the oblique cross-section using centerline tangent.
+     // Very steep/ambiguous contours are unmeasurable in this 2D model.
+     if(slopes.some(m=>!Number.isFinite(m)||Math.abs(m)>1))
+       return {status:'INVALID',reason:'Curvatura o inclinación excesiva para medir bordes con confianza',
          detectedPerRow:lines.map(l=>l.segments.length),lines,lanes:[]};
-     lanes.push({index:i+1,centerPx:center,meanPx:widths.reduce((a,b)=>a+b,0)/widths.length,
-       minPx:Math.min(...widths),maxPx:Math.max(...widths),rowWidthsPx:widths});
+     const widths=parts.map((p,j)=>p.widthPx/Math.hypot(1,slopes[j]));
+     const center=Math.round(centers.reduce((a,b)=>a+b,0)/centers.length);
+     lanes.push({index:i+1,centerPx:center,
+       lateralRangePx:Math.max(...centers)-Math.min(...centers),
+       meanPx:widths.reduce((a,b)=>a+b,0)/widths.length,
+       minPx:Math.min(...widths),maxPx:Math.max(...widths),
+       rowWidthsPx:widths,rawHorizontalWidthsPx:parts.map(p=>p.widthPx),
+       centerlinePx:centers,centerlineSlope:slopes});
    }
    return {status:'DETECTED',reason:null,lanes,lines,
      detectedPerRow:lines.map(l=>l.segments.length)};
@@ -139,11 +155,13 @@
      if(Math.max(devMin,devMax)+uncertainty<=recipe.toleranceMm)status='OK';
      else if(devMin-uncertainty>recipe.toleranceMm || devMax-uncertainty>recipe.toleranceMm)
        status='NOK';
-     if(baseline?.centers && baseline.centers.length===recipe.count &&
-        Math.abs(l.centerPx-baseline.centers[l.index-1])>Math.max(15,l.meanPx*.4))
-       status='REVIEW';
+     // Track lateral motion for diagnostics, NEVER for OK/NOK/REVIEW.
+     // A strip can sweep across the camera as long as its entire contour
+     // remains measurable inside the ROI and lanes remain separable.
+     const lateralShiftPx=baseline?.centers?.length===recipe.count
+       ? l.centerPx-baseline.centers[l.index-1] : null;
      return {...l,minMm,maxMm,meanMm,deltaMm:meanMm-recipe.nominalMm,
-       uncertaintyMm:uncertainty,status};
+       lateralShiftPx, uncertaintyMm:uncertainty,status};
    });
    return {status:lanes.some(l=>l.status==='NOK')?'NOK':
       lanes.every(l=>l.status==='OK')?'OK':'REVIEW',
