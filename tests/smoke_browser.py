@@ -222,5 +222,28 @@ class BrowserSmoke(unittest.TestCase):
             browser.close()
 
 
+    def test_oscillating_strip_width_only_not_sideways_position(self):
+        """Swayed rubber may move 55 px and curve without a false width alarm."""
+        page=self.new_page(1500,960)
+        errors=[]
+        page.on("pageerror",lambda e:errors.append(str(e)))
+        page.set_content(PORTABLE.read_text(encoding="utf-8"),wait_until="load")
+        page.locator("#strip-demo").click()
+        page.locator("#strip-calibrate").click()
+        self.assertEqual(page.locator("#strip-verdict").inner_text(),"OK")
+        page.locator("#strip-sway").click()
+        self.assertIn("ON",page.locator("#strip-sway").inner_text())
+        self.assertEqual(page.locator("#strip-verdict").inner_text(),"OK")
+        page.screenshot(path=str(OUT/"vision-tiras-oscilacion-ok.png"),full_page=True)
+        page.locator("#strip-run").click()
+        page.wait_for_timeout(2600)
+        self.assertEqual(page.locator("#strip-verdict").inner_text(),"OK")
+        page.locator("#strip-run").click()
+        page.locator("#strip-fault").click()
+        self.assertEqual(page.locator("#strip-verdict").inner_text(),"NOK")
+        self.assertEqual(errors,[])
+        page.close()
+
+
 if __name__ == "__main__":
     unittest.main()
