@@ -141,6 +141,7 @@
       </div>
       <p class="small-muted">Si la cámara está en ángulo, tiene distorsión no corregida, pierde foco, cambia de altura o los bordes no contrastan, se debe detener y volver a verificar. El posicionamiento longitudinal requiere encoder: aquí se guarda fecha/hora, no metros fabricados.</p>
       <div class="strip-actions">
+        <button id="strip-example-3x50" type="button" title="Preparar los parámetros del montaje ilustrado; obliga a calibrar con cámara física">▥ Montaje real de ejemplo: 3 × 50 ± 2 mm</button>
         <button id="strip-demo" type="button">◈ Cinta demo (1–4)</button>
         <button id="strip-calibrate" type="button" class="primary">⊙ Detectar patrón y calibrar muestra</button>
         <button id="strip-once" type="button">▶ Medir fotograma</button>
@@ -156,6 +157,7 @@
         <button id="strip-export-csv" type="button">Exportar CSV de mediciones</button>
         <button id="strip-export-png" type="button">Guardar imagen anotada</button>
       </div>
+      <p class="small-muted"><strong>Montaje de la imagen:</strong> 3 tiras nominales de 50 mm, tolerancia ±2 mm, referencias a 100 mm centro–centro y altura cámara-plano de 800 mm. <strong>Ilustración, no imagen de medición a escala.</strong> Verifica con el visor que las tres tiras caben en el campo real. Los fiduciales deben estar a la altura de la superficie medida, no solo pegados a la cinta si la goma tiene espesor.</p>
       <p id="strip-message" class="small-muted" role="status" aria-live="polite">Empieza con «Cinta demo» para ver cuatro tiras, o conecta la cámara USB/IP desde el visor de arriba y configura el patrón físico.</p>
     </div>
     <div class="strip-results">
@@ -572,6 +574,34 @@
    return {status:'DETECTED',reason:null,lanes,lines,
      detectedPerRow:lines.map(l=>l.segments.length)};
  }
+ /**
+  * Geometric sanity check BEFORE claiming calibration. The sum of physical
+  * strip widths must fit in the measured ROI at the independent marker scale.
+  * This is a necessary condition, not an optical calibration or accuracy proof.
+  */
+ function assessFieldOfView(recipeInput, referencePixels, frameWidth){
+   const recipe=validateRecipe(recipeInput);
+   finite(referencePixels,1,100000,"Distancia en píxeles entre marcadores");
+   finite(frameWidth,64,100000,"Anchura de imagen");
+   if(recipe.roi.x+recipe.roi.width>frameWidth)
+     return {status:"INVALID",reason:"ROI fuera del campo de visión"};
+   const mmPerPixel=recipe.referenceMm/referencePixels;
+   const projectedStripPx=recipe.nominalMm/mmPerPixel;
+   const minimumWidthPx=projectedStripPx*recipe.count;
+   const physicalWidthMm=recipe.count*recipe.nominalMm;
+   if(minimumWidthPx>=recipe.roi.width-2)
+     return {status:"INVALID",mmPerPixel,projectedStripPx,minimumWidthPx,
+       reason:"CAMPO VISUAL INSUFICIENTE: "+recipe.count+
+       " tiras de "+recipe.nominalMm+" mm ocupan al menos "+
+       Math.ceil(minimumWidthPx)+" px y la ROI solo tiene "+recipe.roi.width+
+       " px. Aleja/ajusta óptica, amplía ROI o revisa distancia real de marcadores; no calibres usando el ancho nominal."};
+   if(recipe.toleranceMm>0 && recipe.toleranceMm/mmPerPixel<3)
+     return {status:"REVIEW",mmPerPixel,projectedStripPx,minimumWidthPx,
+       reason:"RESOLUCIÓN INSUFICIENTE: tolerancia representada por menos de 3 píxeles; cambia óptica o resolución."};
+   return {status:"POSSIBLE",mmPerPixel,projectedStripPx,
+     minimumWidthPx,physicalWidthMm,
+     reason:"Geometría posible en ROI; NO acredita precisión, lente, perspectiva ni referencia coplanar."};
+ }
  function evaluate(image,recipeInput,calibration,audit,baseline=null){
    const recipe=validateRecipe(recipeInput);
    const extracted=extractStrips(image,recipe);
@@ -616,7 +646,7 @@
      centers:result.lanes.map(l=>l.centerPx),
      widthsAtSampleMm:result.lanes.map(l=>l.meanMm)});
  }
- return Object.freeze({validateRecipe,findReferenceMarkers,extractStrips,evaluate,makeBaseline});
+ return Object.freeze({validateRecipe,findReferenceMarkers,extractStrips,evaluate,makeBaseline,assessFieldOfView});
 });
 
 /* SPDX-License-Identifier: MIT
@@ -1162,6 +1192,17 @@ function loadRecipe(recipe){
   $txt('strip-audit','La receta no contiene calibración activa; verifica marcas físicas');
   note('Receta cargada: selecciona ROI si cambió el encuadre, comprueba patrón y calibra de nuevo.');
 }
+function loadPhysicalExample(){
+  // An installation preset is NOT a camera calibration, nor synthetic proof.
+  // It does not switch away from an already connected USB/IP camera.
+  const example={id:'GOMA-3X50-L01',count:3,nominalMm:50,toleranceMm:2,
+    referenceMm:100,distanceMm:800,polarity:'dark',threshold:95,
+    minRunPx:8,roi:defaultRoi()};
+  loadRecipe(example);
+  note('Ejemplo 3 tiras × 50 ±2 mm, marcas físicas a 100 mm y cámara a 800 mm. '+
+    'NO es una calibración: usa imagen REAL, marcas en el plano de la goma, '+
+    'comprueba ancho disponible y patrón físico independiente antes de medir.');
+}
 function loadSaved(){
   try{
     const data=JSON.parse(localStorage.getItem(memoryKey)||'{}');
@@ -1301,6 +1342,8 @@ async function calibrate(){
     const marks=strips.findReferenceMarkers(frame);
     // The independent known-distance marks are checked by the existing v0.3 audit engine.
     const cal=core.createAuditedCalibration(frame,marks,r.referenceMm,r.distanceMm,acq.getSourceId());
+    const geometry=strips.assessFieldOfView(r,cal.referencePixels,frame.width);
+    if(geometry.status!=='POSSIBLE')throw Error(geometry.reason);
     const audit=core.auditCameraFrame(frame,cal,acq.getSourceId());
     if(audit.status!=='VERIFIED')throw Error(audit.reason);
     const result=strips.evaluate(frame,r,cal,audit);
@@ -1370,6 +1413,7 @@ function changed(){
   $txt('strip-scale','RECALIBRAR');$txt('strip-audit','Receta modificada: calibra de nuevo');
   note('Parámetro cambiado. Calibración y muestra previas invalidadas.',true);
 }
+$('strip-example-3x50').addEventListener('click',loadPhysicalExample);
 $('strip-demo').addEventListener('click',demo);
 $('strip-calibrate').addEventListener('click',calibrate);
 $('strip-once').addEventListener('click',async()=>{
