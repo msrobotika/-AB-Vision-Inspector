@@ -150,7 +150,8 @@ class BrowserSmoke(unittest.TestCase):
 
     def test_strip_recipe_save_reload_requires_new_calibration(self):
         page=self.new_page()
-        page.set_content(PORTABLE.read_text(encoding="utf-8"),wait_until="load")
+        # localStorage needs an origin; about:blank from set_content is not persistent.
+        page.goto(self.url,wait_until="load")
         page.locator("#strip-demo").click()
         page.locator("#strip-calibrate").click()
         self.assertEqual(page.locator("#strip-verdict").inner_text(),"OK")
