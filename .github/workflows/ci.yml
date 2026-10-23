@@ -1,4 +1,4 @@
-name: AB-Vision Inspector · pruebas y capturas
+name: AB-Vision Inspector · tiras y capturas reales
 
 on:
   push:
@@ -28,7 +28,19 @@ jobs:
         run: |
           node --check src/vision-core.js
           node --check src/app.js
-          node --test tests/core.test.js
+          node --check src/strip-core.js
+          node --check src/strip-ui.js
+          node --test tests/core.test.js tests/strip-core.test.js
+      - name: Validar empaquetado HTML completamente portable
+        run: |
+          python tools_build_portable.py
+          python - <<'PY'
+          from pathlib import Path
+          html=Path('AB-Vision-Inspector-PORTABLE.html').read_text(encoding='utf-8')
+          assert 'ABStripCore' in html and 'strip-calibrate' in html
+          assert '<script src=' not in html and 'stylesheet' not in html
+          print('Portable strip viewer: self-contained PASS')
+          PY
       - name: Comprobar servidor cámaras IP
         run: |
           python -m py_compile serve.py

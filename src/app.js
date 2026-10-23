@@ -377,6 +377,73 @@ async function connectIp(){
   if(ok)info('Cámara IP conectada y primer JPEG captado. Calibra y activa inspección continua.');
 }
 
+/** Dedicated rubber-strip lab: shares the camera/IP acquisition and source canvas.
+ * No token, credentials, web write command or PLC access is exposed.
+ */
+function stripDemo(count=4,offsetPx=0,reset=false,oscillationPx=0){
+  if(reset){
+    stopAuto();stopCamera();stopIp();invalidateCalibration('Nueva muestra de tiras demo');
+  }
+  const width=1280,height=720;
+  if(source.width!==width||source.height!==height)updateSizes(width,height);
+  const centers={1:[640],2:[470,810],3:[340,640,940],4:[250,510,770,1030]}[count];
+  if(!centers)throw Error('Solo de 1 a 4 tiras');
+  sctx.fillStyle='#abb5b4';sctx.fillRect(0,0,width,height);
+  sctx.fillStyle='#bfc5c1';sctx.fillRect(85,87,1110,490);
+  sctx.strokeStyle='#dbe8dc';sctx.lineWidth=2;
+  for(let y=100;y<570;y+=58){sctx.beginPath();sctx.moveTo(90,y);sctx.lineTo(1190,y);sctx.stroke();}
+  centers.forEach((cx,i)=>{
+    const normalW=50+(i===Math.floor(count/2)?offsetPx:0);
+    for(let y=100;y<550;y++){
+      // Lateral drift and sinusoidal sway are allowed; the known sample width
+      // is perpendicular to the local tangent, not to the camera's X axis.
+      const wave=oscillationPx===0?0:22*Math.sin((y-100)/95+cx/140);
+      const slope=oscillationPx===0?0:(22/95)*Math.cos((y-100)/95+cx/140);
+      const center=cx+oscillationPx+wave;
+      const horizontalW=normalW*Math.hypot(1,slope);
+      sctx.fillStyle='#242a2e';sctx.fillRect(center-horizontalW/2,y,horizontalW,1);
+    }
+  });
+  // Synthetic fiducials. Real installations require physical, fixed marks in the same plane.
+  for(const [x,y,color] of [[100,649,'#13eddf'],[1100,649,'#f725ca']]){
+    sctx.fillStyle=color;sctx.beginPath();sctx.arc(x,y,10,0,Math.PI*2);sctx.fill();
+  }
+  roi={x:110,y:125,width:1060,height:390};
+  $('roi-label').textContent='ROI de tiras · 1060 × 390';
+  imageReady=true;lastSource='strip-demo';lastAnalysis=null;
+  $('source-label').textContent='DEMOSTRACIÓN SINTÉTICA · '+count+' tira(s) de goma';
+  setFeed('● CINTA SIMULADA',true);renderPicture();
+}
+window.ABVisionAcquisition=Object.freeze({
+  getFrame:()=>imageReady?getFrame():null,
+  getSourceId:()=>sourceIdentity(),
+  getRoi:()=>roi?{x:roi.x,y:roi.y,width:roi.width,height:roi.height}:null,
+  setRoi:next=>{
+    const rect=core.clampRect(next,source.width,source.height);
+    if(rect.x!==next.x||rect.y!==next.y||rect.width!==next.width||rect.height!==next.height)
+      throw new RangeError('ROI guardada no coincide con resolución actual');
+    roi=rect;$('roi-label').textContent='ROI de receta · '+rect.width+' × '+rect.height;
+    renderPicture(lastAnalysis);
+  },
+  isLive:()=>Boolean(stream||ipActive),
+  isStripDemo:()=>lastSource==='strip-demo',
+  stopDefectAuto:stopAuto,
+  refresh:async()=>ipActive?fetchIpFrame():stream?captureFrame():imageReady,
+  demo:stripDemo,
+  setOverlay:markers=>{
+    renderPicture();
+    if(!Array.isArray(markers))return;
+    vctx.save();vctx.lineWidth=Math.max(2,view.width/450);vctx.font='bold 15px sans-serif';
+    for(const marker of markers){
+      vctx.strokeStyle=marker.status==='OK'?'#30e9ac':marker.status==='NOK'?'#ff647b':'#ffd36d';
+      const x=marker.centerPx;
+      vctx.beginPath();vctx.moveTo(x,115);vctx.lineTo(x,550);vctx.stroke();
+      vctx.fillStyle=vctx.strokeStyle;
+      vctx.fillText('T'+marker.index+' '+marker.meanMm.toFixed(2)+' mm',Math.max(12,x-30),110);
+    }
+    vctx.restore();
+  }
+});
 function init() {
   try{const saved=JSON.parse(localStorage.getItem('ab-vision-recipe-v2')||localStorage.getItem('ab-vision-recipe-v1')||'null');if(saved?.recipe)applyRecipe(saved.recipe);if(saved?.metrology)applyMetrology(saved.metrology);}catch{}
   $('demo').addEventListener('click',createDemo);

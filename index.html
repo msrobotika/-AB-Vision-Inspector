@@ -1,14 +1,14 @@
 <!doctype html>
 <html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="AB-Vision Inspector: inspección visual industrial abierta, local y gratuita. MS ROBOTIKA.">
-<title>AB-Vision Inspector — MS ROBOTIKA</title><link rel="icon" href="/favicon.svg"><link rel="stylesheet" href="src/style.css">
+<title>AB-Vision Inspector — MS ROBOTIKA</title><link rel="icon" href="favicon.svg"><link rel="stylesheet" href="src/style.css"><link rel="stylesheet" href="src/strip.css">
 </head>
 <body>
 <div class="shell">
 <aside class="side">
   <div class="logo"><span class="logo-icon">◈</span><div><strong>MS ROBOTIKA</strong><small>OPEN ENGINEERING</small></div></div>
   <p class="side-caption">VISIÓN INDUSTRIAL</p>
-  <nav><a href="#vision" class="active"><span>◉</span> Inspección</a><a href="#config"><span>☷</span> Receta de análisis</a><a href="#history"><span>▤</span> Historial</a></nav>
+  <nav><a href="#vision" class="active"><span>◉</span> Inspección</a><a href="#config"><span>☷</span> Receta de análisis</a><a href="#history"><span>▤</span> Historial</a><a href="#strips"><span>▥</span> Tiras de goma</a></nav>
   <div class="side-bottom"><span class="online-indicator"></span> Motor local · v0.3.0<p>Open source · MIT<br>Procesamiento dentro de tu navegador</p></div>
 </aside>
 <main>
@@ -66,10 +66,58 @@
   <div class="status-msg" id="message" role="status" aria-live="polite">Listo para inspeccionar. Puedes empezar con la demostración.</div>
   </div></section>
 </div>
+
+<section class="strip-module" id="strips" aria-label="Control dimensional de tiras de goma">
+  <header class="strip-heading"><div><span class="overline">04 / METROLOGÍA EN CONTINUO</span><h2>Tiras de goma · control de ancho</h2>
+  <p>Inspección cenital de 1–4 tiras sobre cinta, con movimiento lateral/oscilación permitidos. La calidad depende de su anchura real perpendicular al recorrido, no de que permanezcan centradas en un píxel fijo. Cámara USB o IP autorizada; trazabilidad por tiempo y fotograma.</p></div>
+  <span id="strip-status" class="strip-status" aria-live="polite">SIN RECETA CALIBRADA</span></header>
+  <div class="strip-alert"><strong>Antes de medir:</strong> coloca dos marcas rígidas CIAN y MAGENTA, separadas una distancia física conocida en el plano de la goma y fuera de las tiras. Esta referencia se reconoce automáticamente y se <strong>audita en cada fotograma</strong>. La muestra solo sirve para aprender las zonas y anchuras iniciales; su ancho nominal no valida la escala. Sin referencia: <strong>SIN MEDICIÓN</strong>.</div>
+  <div class="strip-grid">
+    <div class="strip-settings">
+      <div class="strip-fields">
+        <label>Receta / producto<input id="strip-id" maxlength="64" value="GOMA-LINEA-01"></label>
+        <label>Número de tiras<select id="strip-count"><option value="1">1 tira</option><option value="2">2 tiras</option><option value="3">3 tiras</option><option value="4" selected>4 tiras</option></select></label>
+        <label>Ancho nominal por tira (mm)<input id="strip-nominal" type="number" min=".1" max="2000" step=".01" value="10"></label>
+        <label>Tolerancia ± (mm)<input id="strip-tolerance" type="number" min="0" max="100" step=".01" value="1.5"></label>
+        <label>Separación real entre marcas (mm)<input id="strip-reference" type="number" min="1" max="2000" step=".01" value="200"></label>
+        <label>Distancia cámara al plano (mm)<input id="strip-distance" type="number" min="1" max="100000" value="500"></label>
+        <label>Tiras sobre fondo<select id="strip-polarity"><option value="dark" selected>Oscuras / cinta clara</option><option value="light">Claras / cinta oscura</option></select></label>
+        <label>Umbral de luminancia (0–255)<input id="strip-threshold" type="number" min="1" max="254" step="1" value="95"></label>
+      </div>
+      <p class="small-muted">Si la cámara está en ángulo, tiene distorsión no corregida, pierde foco, cambia de altura o los bordes no contrastan, se debe detener y volver a verificar. El posicionamiento longitudinal requiere encoder: aquí se guarda fecha/hora, no metros fabricados.</p>
+      <div class="strip-actions">
+        <button id="strip-demo" type="button">◈ Cinta demo (1–4)</button>
+        <button id="strip-calibrate" type="button" class="primary">⊙ Detectar patrón y calibrar muestra</button>
+        <button id="strip-once" type="button">▶ Medir fotograma</button>
+        <button id="strip-run" type="button">⟳ Continuo: OFF</button>
+        <button id="strip-fault" type="button">Simular variación de ancho</button>
+        <button id="strip-sway" type="button">Simular oscilación lateral: OFF</button>
+      </div>
+      <div class="strip-actions">
+        <button id="strip-save" type="button">Guardar receta local</button>
+        <select id="strip-saved" aria-label="Recetas guardadas"><option value="">Selecciona una receta…</option></select>
+        <button id="strip-export-recipe" type="button">Exportar receta JSON</button>
+        <label class="button file-button">Importar receta<input id="strip-import-recipe" type="file" accept=".json,application/json"></label>
+        <button id="strip-export-csv" type="button">Exportar CSV de mediciones</button>
+        <button id="strip-export-png" type="button">Guardar imagen anotada</button>
+      </div>
+      <p id="strip-message" class="small-muted" role="status" aria-live="polite">Empieza con «Cinta demo» para ver cuatro tiras, o conecta la cámara USB/IP desde el visor de arriba y configura el patrón físico.</p>
+    </div>
+    <div class="strip-results">
+      <div><small>ESTADO DIMENSIONAL</small><strong id="strip-verdict">SIN MEDICIÓN</strong></div>
+      <div><small>REFERENCIA DE ESCALA</small><strong id="strip-scale">SIN CALIBRAR</strong></div>
+      <div><small>MUESTRAS EN ESTA SESIÓN</small><strong id="strip-samples">0</strong></div>
+      <div><small>ÚLTIMAS ANCHURAS POR TIRA</small><p id="strip-widths">—</p></div>
+      <div><small>AUDITORÍA DE CÁMARA</small><p id="strip-audit">NO VALIDADA · espera referencia física</p></div>
+    </div>
+  </div>
+  <div class="table-scroller"><table><thead><tr><th>HORA UTC</th><th>RECETA</th><th>FOTOGRAMA</th><th>ANCHOS T1 / T2 / T3 / T4 (mm)</th><th>DESVIACIÓN / VARIACIÓN</th><th>ESTADO</th><th>AUDITORÍA</th></tr></thead><tbody id="strip-history"><tr><td colspan="7">Sin mediciones. Los fotogramas se procesan localmente; no se archivan automáticamente.</td></tr></tbody></table></div>
+  <p class="small-muted">Histórico temporal limitado a 1000 muestras en memoria. Exporta CSV antes de cerrar. No es un historiador industrial ni proporciona rechazo de piezas o control de seguridad.</p>
+</section>
 <div class="metrics"><div class="metric"><span>RESULTADO DE INSPECCIÓN</span><strong id="verdict" class="pending">SIN ANALIZAR</strong><small id="duration">Esperando imagen</small></div><div class="metric"><span>DEFECTOS DETECTADOS</span><strong id="defects">—</strong><small>Componentes que superan el área mínima</small></div><div class="metric"><span>SUPERFICIE AFECTADA</span><strong id="coverage">—</strong><small>Porcentaje de la región inspeccionada</small></div><div class="metric"><span>ANCHO × ALTO (mm)</span><strong id="measured-size">SIN CALIBRAR</strong><small id="dimension-status">Sin metrología verificada</small></div><div class="metric"><span>INSPECCIONES EN SESIÓN</span><strong id="count">0</strong><small>Historial exportable a CSV</small></div></div>
 <section class="history-card" id="history"><div class="card-head"><div><span class="overline">03 / TRAZABILIDAD</span><h2>Registro de inspecciones</h2></div><div class="history-actions"><button id="save-png">Exportar imagen anotada</button><button id="export-csv">Exportar CSV</button><button id="export-json">Exportar JSON</button><button id="clear-history" class="destructive">Vaciar</button></div></div>
   <div class="table-scroller"><table><thead><tr><th>HORA</th><th>IDENTIFICADOR</th><th>MODO</th><th>DEFECTOS</th><th>COBERTURA</th><th>RESULTADO</th><th>DIMENSIONES (mm)</th><th>DURACIÓN</th></tr></thead><tbody id="history-rows"><tr><td colspan="8" class="empty">Los análisis realizados durante esta sesión aparecerán aquí.</td></tr></tbody></table></div></section>
 <footer><span>© 2026 MS ROBOTIKA · Diseño y motor independientes · Licencia MIT</span><span>Datos e imágenes: procesados localmente · Sin telemetría</span></footer>
 </main></div>
 <canvas id="source" width="1280" height="720" hidden></canvas>
-<script src="src/vision-core.js" defer></script><script src="src/app.js" defer></script></body></html>
+<script src="src/vision-core.js" defer></script><script src="src/strip-core.js" defer></script><script src="src/app.js" defer></script><script src="src/strip-ui.js" defer></script></body></html>

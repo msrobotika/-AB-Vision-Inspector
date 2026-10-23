@@ -25,6 +25,37 @@
 .audit-good{background:#123c30;color:#75f7bc}
 .audit-bad{background:#492a29;color:#ffd1a2}
 
+
+/* 1–4 strip width inspection · local industrial lab, scoped styles */
+.strip-module{border:1px solid #356b69;border-radius:13px;background:linear-gradient(145deg,#101f2a,#12232f);margin:24px 0;padding:24px;box-shadow:0 12px 40px #06101a50}
+.strip-heading{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}
+.strip-heading h2{font-size:24px;color:#eafbf6;margin:4px 0 7px}.strip-heading p{font-size:12px;color:#8faeb9;max-width:770px;margin:0 0 13px}
+.strip-status{font-size:10px;font-weight:900;letter-spacing:.08em;padding:8px 11px;color:#ffce7c;background:#3a3027;border:1px solid #80613d;border-radius:7px;white-space:nowrap}
+.strip-status.ok{color:#8af1c6;background:#163f37;border-color:#3a8971}
+.strip-status.nok{color:#ff919e;background:#44303a;border-color:#a95867}
+.strip-alert{line-height:1.7;color:#edcf9c;background:#342b21;border:1px solid #604b2f;border-radius:7px;padding:11px 15px;font-size:11px;margin:12px 0 19px}
+.strip-alert strong{color:#f9d8a4}
+.strip-grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(240px,.7fr);gap:18px}
+.strip-settings{min-width:0}.strip-fields{display:grid;grid-template-columns:repeat(4,minmax(125px,1fr));gap:12px}
+.strip-fields label{display:flex;flex-direction:column;gap:6px;font-size:10px;color:#b2cad2;letter-spacing:.015em}
+.strip-fields input,.strip-fields select,.strip-actions select{background:#0e1d2a;border:1px solid #375061;border-radius:6px;padding:9px 8px;color:#f0fff9;min-width:0;width:100%;font-size:12px}
+.strip-settings>.small-muted{margin:15px 0}
+.strip-actions{display:flex;flex-wrap:wrap;gap:7px;margin:11px 0}.strip-actions button,.strip-actions .button{font-size:11px;line-height:1.45;padding:8px 10px}
+.strip-actions .primary{border-color:#2f907d;background:#194c49;color:#8effe2}.strip-actions .primary:hover{background:#236459}
+.strip-actions select{max-width:230px;width:200px}
+.strip-results{display:grid;gap:8px;align-content:start}
+.strip-results>div{border:1px solid #334a56;border-radius:8px;background:#0c1b26;padding:12px}
+.strip-results small{display:block;font-size:9px;color:#819dac;letter-spacing:.08em;font-weight:800}
+.strip-results strong{font-size:18px;color:#d7f7f0;display:block;margin-top:5px}
+.strip-results p{font-size:12px;color:#bde5d9;margin:6px 0 0;line-height:1.6}
+.strip-results #strip-verdict[data-state="OK"]{color:#55e0b8}
+.strip-results #strip-verdict[data-state="NOK"]{color:#ff7587}
+.strip-results #strip-verdict[data-state="REVIEW"],.strip-results #strip-verdict[data-state="INVALID"]{color:#ffc677}
+#strip-history td{white-space:nowrap;font-size:10px}
+#strip-message{min-height:22px}#strip-message.error{color:#ffa0a0}
+@media(max-width:1250px){.strip-fields{grid-template-columns:repeat(2,minmax(125px,1fr))}}
+@media(max-width:850px){.strip-grid{grid-template-columns:1fr}.strip-results{grid-template-columns:repeat(2,minmax(0,1fr))}.strip-heading{flex-direction:column}.strip-status{white-space:normal}}
+@media(max-width:480px){.strip-module{padding:13px;margin:18px 0}.strip-fields{grid-template-columns:1fr 1fr;gap:8px}.strip-results{grid-template-columns:1fr 1fr}.strip-heading h2{font-size:19px}.strip-actions select{max-width:100%}}
 </style>
 </head>
 <body>
@@ -32,7 +63,7 @@
 <aside class="side">
   <div class="logo"><span class="logo-icon">◈</span><div><strong>MS ROBOTIKA</strong><small>OPEN ENGINEERING</small></div></div>
   <p class="side-caption">VISIÓN INDUSTRIAL</p>
-  <nav><a href="#vision" class="active"><span>◉</span> Inspección</a><a href="#config"><span>☷</span> Receta de análisis</a><a href="#history"><span>▤</span> Historial</a></nav>
+  <nav><a href="#vision" class="active"><span>◉</span> Inspección</a><a href="#config"><span>☷</span> Receta de análisis</a><a href="#history"><span>▤</span> Historial</a><a href="#strips"><span>▥</span> Tiras de goma</a></nav>
   <div class="side-bottom"><span class="online-indicator"></span> Motor local · v0.3.0<p>Open source · MIT<br>Procesamiento dentro de tu navegador</p></div>
 </aside>
 <main>
@@ -90,6 +121,54 @@
   <div class="status-msg" id="message" role="status" aria-live="polite">Listo para inspeccionar. Puedes empezar con la demostración.</div>
   </div></section>
 </div>
+
+<section class="strip-module" id="strips" aria-label="Control dimensional de tiras de goma">
+  <header class="strip-heading"><div><span class="overline">04 / METROLOGÍA EN CONTINUO</span><h2>Tiras de goma · control de ancho</h2>
+  <p>Inspección cenital de 1–4 tiras sobre cinta, con movimiento lateral/oscilación permitidos. La calidad depende de su anchura real perpendicular al recorrido, no de que permanezcan centradas en un píxel fijo. Cámara USB o IP autorizada; trazabilidad por tiempo y fotograma.</p></div>
+  <span id="strip-status" class="strip-status" aria-live="polite">SIN RECETA CALIBRADA</span></header>
+  <div class="strip-alert"><strong>Antes de medir:</strong> coloca dos marcas rígidas CIAN y MAGENTA, separadas una distancia física conocida en el plano de la goma y fuera de las tiras. Esta referencia se reconoce automáticamente y se <strong>audita en cada fotograma</strong>. La muestra solo sirve para aprender las zonas y anchuras iniciales; su ancho nominal no valida la escala. Sin referencia: <strong>SIN MEDICIÓN</strong>.</div>
+  <div class="strip-grid">
+    <div class="strip-settings">
+      <div class="strip-fields">
+        <label>Receta / producto<input id="strip-id" maxlength="64" value="GOMA-LINEA-01"></label>
+        <label>Número de tiras<select id="strip-count"><option value="1">1 tira</option><option value="2">2 tiras</option><option value="3">3 tiras</option><option value="4" selected>4 tiras</option></select></label>
+        <label>Ancho nominal por tira (mm)<input id="strip-nominal" type="number" min=".1" max="2000" step=".01" value="10"></label>
+        <label>Tolerancia ± (mm)<input id="strip-tolerance" type="number" min="0" max="100" step=".01" value="1.5"></label>
+        <label>Separación real entre marcas (mm)<input id="strip-reference" type="number" min="1" max="2000" step=".01" value="200"></label>
+        <label>Distancia cámara al plano (mm)<input id="strip-distance" type="number" min="1" max="100000" value="500"></label>
+        <label>Tiras sobre fondo<select id="strip-polarity"><option value="dark" selected>Oscuras / cinta clara</option><option value="light">Claras / cinta oscura</option></select></label>
+        <label>Umbral de luminancia (0–255)<input id="strip-threshold" type="number" min="1" max="254" step="1" value="95"></label>
+      </div>
+      <p class="small-muted">Si la cámara está en ángulo, tiene distorsión no corregida, pierde foco, cambia de altura o los bordes no contrastan, se debe detener y volver a verificar. El posicionamiento longitudinal requiere encoder: aquí se guarda fecha/hora, no metros fabricados.</p>
+      <div class="strip-actions">
+        <button id="strip-demo" type="button">◈ Cinta demo (1–4)</button>
+        <button id="strip-calibrate" type="button" class="primary">⊙ Detectar patrón y calibrar muestra</button>
+        <button id="strip-once" type="button">▶ Medir fotograma</button>
+        <button id="strip-run" type="button">⟳ Continuo: OFF</button>
+        <button id="strip-fault" type="button">Simular variación de ancho</button>
+        <button id="strip-sway" type="button">Simular oscilación lateral: OFF</button>
+      </div>
+      <div class="strip-actions">
+        <button id="strip-save" type="button">Guardar receta local</button>
+        <select id="strip-saved" aria-label="Recetas guardadas"><option value="">Selecciona una receta…</option></select>
+        <button id="strip-export-recipe" type="button">Exportar receta JSON</button>
+        <label class="button file-button">Importar receta<input id="strip-import-recipe" type="file" accept=".json,application/json"></label>
+        <button id="strip-export-csv" type="button">Exportar CSV de mediciones</button>
+        <button id="strip-export-png" type="button">Guardar imagen anotada</button>
+      </div>
+      <p id="strip-message" class="small-muted" role="status" aria-live="polite">Empieza con «Cinta demo» para ver cuatro tiras, o conecta la cámara USB/IP desde el visor de arriba y configura el patrón físico.</p>
+    </div>
+    <div class="strip-results">
+      <div><small>ESTADO DIMENSIONAL</small><strong id="strip-verdict">SIN MEDICIÓN</strong></div>
+      <div><small>REFERENCIA DE ESCALA</small><strong id="strip-scale">SIN CALIBRAR</strong></div>
+      <div><small>MUESTRAS EN ESTA SESIÓN</small><strong id="strip-samples">0</strong></div>
+      <div><small>ÚLTIMAS ANCHURAS POR TIRA</small><p id="strip-widths">—</p></div>
+      <div><small>AUDITORÍA DE CÁMARA</small><p id="strip-audit">NO VALIDADA · espera referencia física</p></div>
+    </div>
+  </div>
+  <div class="table-scroller"><table><thead><tr><th>HORA UTC</th><th>RECETA</th><th>FOTOGRAMA</th><th>ANCHOS T1 / T2 / T3 / T4 (mm)</th><th>DESVIACIÓN / VARIACIÓN</th><th>ESTADO</th><th>AUDITORÍA</th></tr></thead><tbody id="strip-history"><tr><td colspan="7">Sin mediciones. Los fotogramas se procesan localmente; no se archivan automáticamente.</td></tr></tbody></table></div>
+  <p class="small-muted">Histórico temporal limitado a 1000 muestras en memoria. Exporta CSV antes de cerrar. No es un historiador industrial ni proporciona rechazo de piezas o control de seguridad.</p>
+</section>
 <div class="metrics"><div class="metric"><span>RESULTADO DE INSPECCIÓN</span><strong id="verdict" class="pending">SIN ANALIZAR</strong><small id="duration">Esperando imagen</small></div><div class="metric"><span>DEFECTOS DETECTADOS</span><strong id="defects">—</strong><small>Componentes que superan el área mínima</small></div><div class="metric"><span>SUPERFICIE AFECTADA</span><strong id="coverage">—</strong><small>Porcentaje de la región inspeccionada</small></div><div class="metric"><span>ANCHO × ALTO (mm)</span><strong id="measured-size">SIN CALIBRAR</strong><small id="dimension-status">Sin metrología verificada</small></div><div class="metric"><span>INSPECCIONES EN SESIÓN</span><strong id="count">0</strong><small>Historial exportable a CSV</small></div></div>
 <section class="history-card" id="history"><div class="card-head"><div><span class="overline">03 / TRAZABILIDAD</span><h2>Registro de inspecciones</h2></div><div class="history-actions"><button id="save-png">Exportar imagen anotada</button><button id="export-csv">Exportar CSV</button><button id="export-json">Exportar JSON</button><button id="clear-history" class="destructive">Vaciar</button></div></div>
   <div class="table-scroller"><table><thead><tr><th>HORA</th><th>IDENTIFICADOR</th><th>MODO</th><th>DEFECTOS</th><th>COBERTURA</th><th>RESULTADO</th><th>DIMENSIONES (mm)</th><th>DURACIÓN</th></tr></thead><tbody id="history-rows"><tr><td colspan="8" class="empty">Los análisis realizados durante esta sesión aparecerán aquí.</td></tr></tbody></table></div></section>
@@ -357,6 +436,187 @@
   return Object.freeze({inspect,validateRecipe,clampRect,MAX_PIXELS,
     validateCalibration,measurePiece,evaluateMeasurement,locateFiducial,
     createAuditedCalibration,auditCameraFrame});
+});
+
+/* SPDX-License-Identifier: MIT · MS ROBOTIKA
+ * Longitudinal rubber strip measurement (1–4 independent lanes).
+ * A known independent reference *must* be present in the image plane.
+ * Browser/Node UMD, no dependencies and no output to physical PLC.
+ */
+(function(root,factory){
+  const lib=factory();
+  if(typeof module==='object'&&module.exports)module.exports=lib;
+  if(root)root.ABStripCore=lib;
+})(typeof window!=='undefined'?window:typeof globalThis!=='undefined'?globalThis:null,function(){
+ 'use strict';
+ const err=(msg)=>{throw new RangeError(msg)};
+ const finite=(v,min,max,label)=>{if(typeof v!=='number'||!Number.isFinite(v)||v<min||v>max)err(label+' fuera de rango');return v};
+ function validateRecipe(value){
+   if(!value||typeof value!=='object'||Array.isArray(value))err('Receta ausente');
+   const count=finite(Number(value.count),1,4,'Número de tiras');
+   if(!Number.isInteger(count))err('Número de tiras entero 1–4');
+   const nominalMm=finite(Number(value.nominalMm),0.1,2000,'Ancho nominal');
+   const toleranceMm=finite(Number(value.toleranceMm),0,100,'Tolerancia');
+   const referenceMm=finite(Number(value.referenceMm),1,2000,'Referencia física en mm');
+   const distanceMm=finite(Number(value.distanceMm),1,100000,'Distancia nominal');
+   const threshold=finite(Number(value.threshold),1,254,'Umbral');
+   const minRunPx=finite(Number(value.minRunPx??8),3,500,'Mínimo de píxeles');
+   if(!Number.isInteger(threshold)||!Number.isInteger(minRunPx))err('Umbral/píxeles deben ser enteros');
+   const polarity=value.polarity;
+   if(!['light','dark'].includes(polarity))err('Contraste: claro u oscuro');
+   const roi=value.roi;
+   if(!roi||!['x','y','width','height'].every(k=>Number.isInteger(roi[k])))err('ROI no válida');
+   if(roi.x<0||roi.y<0||roi.width<40||roi.height<40)err('La ROI debe ser mayor de 40 px');
+   const id=String(value.id||'SIN-ID').slice(0,64);
+   if(!/^[\p{L}\p{N}_. -]{1,64}$/u.test(id))err('Identificador de receta no válido');
+   return Object.freeze({schema:1,id,count,nominalMm,toleranceMm,referenceMm,distanceMm,
+     threshold,minRunPx,polarity,roi:{...roi}});
+ }
+ function validateImage(image){
+   if(!image||!Number.isInteger(image.width)||!Number.isInteger(image.height)||
+      image.width<64||image.height<64||image.width*image.height>4_000_000 ||
+      !image.data||image.data.length!==image.width*image.height*4)
+      err('Fotograma vacío, resolución o búfer inválido');
+   return image;
+ }
+ const isMarker=(data,p,c)=>{
+   const r=data[p],g=data[p+1],b=data[p+2];
+   return c==='cyan' ? r<95&&g>160&&b>120&&g>r*1.8&&b>r*1.5 :
+     r>160&&b>130&&g<115&&r>g*1.8&&b>g*1.7;
+ };
+ /** Rough global fiducial centers: next, existing audited engine validates shape and size. */
+ function findReferenceMarkers(image){
+   validateImage(image);
+   const out=[];
+   for(const color of ['cyan','magenta']){
+     let n=0,sx=0,sy=0,minX=image.width,minY=image.height,maxX=-1,maxY=-1;
+     for(let y=0;y<image.height;y++)for(let x=0;x<image.width;x++){
+       const p=(y*image.width+x)*4;
+       if(!isMarker(image.data,p,color))continue;
+       n++;sx+=x;sy+=y;
+       if(x<minX)minX=x;if(y<minY)minY=y;
+       if(x>maxX)maxX=x;if(y>maxY)maxY=y;
+     }
+     if(n<15 || maxX-minX<3 || maxY-minY<3)err('Faltan marcas de referencia '+color+' visibles');
+     const rectW=maxX-minX+1,rectH=maxY-minY+1;
+     if(rectW/rectH<.5||rectW/rectH>2||rectW>75||rectH>75)
+       err('Referencia '+color+' deformada u objetos de color ambiguos');
+     out.push({x:sx/n,y:sy/n,color,pixels:n});
+   }
+   if(Math.hypot(out[0].x-out[1].x,out[0].y-out[1].y)<100)err('Marcas físicas demasiado próximas');
+   return out;
+ }
+ function scanRow(image,roi,y,recipe){
+   const {x,width}=roi,d=image.data,W=image.width,segments=[];
+   let start=-1;
+   const classify=(xx)=>{
+     const p=(y*W+xx)*4,lum=(77*d[p]+150*d[p+1]+29*d[p+2])>>8;
+     return recipe.polarity==='light'?lum>=recipe.threshold:lum<recipe.threshold;
+   };
+   for(let px=x;px<=x+width;px++){
+     const active=px<x+width && classify(px);
+     if(active&&start<0)start=px;
+     if(!active&&start>=0){
+       if(px-start>=recipe.minRunPx)segments.push({left:start,right:px-1,widthPx:px-start,
+         touchesBorder:start<=x+1||px>=x+width-1});
+       start=-1;
+     }
+   }
+   return segments;
+ }
+ function extractStrips(image,input){
+   validateImage(image);
+   const recipe=validateRecipe(input);
+   const roi=recipe.roi;
+   if(roi.x+roi.width>image.width||roi.y+roi.height>image.height)err('ROI fuera del fotograma: recalibrar');
+   // Eleven transects track each strip through lateral oscillation along the belt.
+   // A fixed X position is NOT a quality criterion: only strip width is.
+   const fractions=[.10,.18,.26,.34,.42,.50,.58,.66,.74,.82,.90],lines=[],rejections=[];
+   for(const f of fractions){
+     const y=roi.y+Math.min(roi.height-1,Math.floor(f*roi.height));
+     const segments=scanRow(image,roi,y,recipe);
+     if(segments.length!==recipe.count||segments.some(s=>s.touchesBorder)){
+       rejections.push({y,detected:segments.length,border:segments.some(s=>s.touchesBorder)});
+     }
+     lines.push({y,segments});
+   }
+   if(rejections.length) return {status:'INVALID',reason:'Número de tiras ambiguo, o tira cortada por la ROI',
+     detectedPerRow:lines.map(l=>l.segments.length),lines,lanes:[]};
+   const lanes=[];
+   for(let i=0;i<recipe.count;i++){
+     // Within each scan row, the left-to-right order identifies the lane.
+     // Different rows and consecutive frames may have very different centers.
+     // That is expected in oscillating rubber; do not classify drift as NOK.
+     const parts=lines.map(l=>l.segments[i]);
+     const centers=parts.map(p=>(p.left+p.right)/2);
+     const ys=lines.map(l=>l.y);
+     const slopes=centers.map((_,j)=>{
+       const lo=Math.max(0,j-1),hi=Math.min(centers.length-1,j+1);
+       return (centers[hi]-centers[lo])/(ys[hi]-ys[lo]);
+     });
+     // Horizontal width overestimates true normal width for slanted strips.
+     // Locally correct the oblique cross-section using centerline tangent.
+     // Very steep/ambiguous contours are unmeasurable in this 2D model.
+     if(slopes.some(m=>!Number.isFinite(m)||Math.abs(m)>1))
+       return {status:'INVALID',reason:'Curvatura o inclinación excesiva para medir bordes con confianza',
+         detectedPerRow:lines.map(l=>l.segments.length),lines,lanes:[]};
+     const widths=parts.map((p,j)=>p.widthPx/Math.hypot(1,slopes[j]));
+     const center=Math.round(centers.reduce((a,b)=>a+b,0)/centers.length);
+     lanes.push({index:i+1,centerPx:center,
+       lateralRangePx:Math.max(...centers)-Math.min(...centers),
+       meanPx:widths.reduce((a,b)=>a+b,0)/widths.length,
+       minPx:Math.min(...widths),maxPx:Math.max(...widths),
+       rowWidthsPx:widths,rawHorizontalWidthsPx:parts.map(p=>p.widthPx),
+       centerlinePx:centers,centerlineSlope:slopes});
+   }
+   return {status:'DETECTED',reason:null,lanes,lines,
+     detectedPerRow:lines.map(l=>l.segments.length)};
+ }
+ function evaluate(image,recipeInput,calibration,audit,baseline=null){
+   const recipe=validateRecipe(recipeInput);
+   const extracted=extractStrips(image,recipe);
+   if(!calibration||!audit||audit.status!=='VERIFIED')
+     return {...extracted,status:'INVALID',reason:audit?.reason||'Falta referencia física auditada',
+       lanes:[],auditStatus:'INVALID'};
+   if(calibration.imageWidth!==image.width||calibration.imageHeight!==image.height)
+     return {...extracted,status:'INVALID',reason:'Resolución modificada: recalibra',lanes:[],auditStatus:'INVALID'};
+   if(Math.abs(calibration.referenceMm-recipe.referenceMm)>1e-8 ||
+      Math.abs(calibration.workingDistanceMm-recipe.distanceMm)>1e-8)
+     return {...extracted,status:'INVALID',reason:'Parámetros físicos modificados: recalibra',lanes:[],auditStatus:'INVALID'};
+   if(extracted.status!=='DETECTED')
+     return {...extracted,auditStatus:'VERIFIED'};
+   const scale=finite(audit.mmPerPixel,.000001,100,'Escala auditada');
+   const uncertainty=finite(audit.uncertaintyMm,0,500,'Incertidumbre indicativa');
+   // Even a perfectly nominal width is NOT OK when the visual uncertainty overlaps limits.
+   const lanes=extracted.lanes.map(l=>{
+     const minMm=l.minPx*scale,maxMm=l.maxPx*scale,meanMm=l.meanPx*scale;
+     const devMin=Math.abs(minMm-recipe.nominalMm),devMax=Math.abs(maxMm-recipe.nominalMm);
+     let status='REVIEW';
+     if(Math.max(devMin,devMax)+uncertainty<=recipe.toleranceMm)status='OK';
+     else if(devMin-uncertainty>recipe.toleranceMm || devMax-uncertainty>recipe.toleranceMm)
+       status='NOK';
+     // Track lateral motion for diagnostics, NEVER for OK/NOK/REVIEW.
+     // A strip can sweep across the camera as long as its entire contour
+     // remains measurable inside the ROI and lanes remain separable.
+     const lateralShiftPx=baseline?.centers?.length===recipe.count
+       ? l.centerPx-baseline.centers[l.index-1] : null;
+     return {...l,minMm,maxMm,meanMm,deltaMm:meanMm-recipe.nominalMm,
+       lateralShiftPx, uncertaintyMm:uncertainty,status};
+   });
+   return {status:lanes.some(l=>l.status==='NOK')?'NOK':
+      lanes.every(l=>l.status==='OK')?'OK':'REVIEW',
+      auditStatus:'VERIFIED',reason:null,lanes,lines:extracted.lines,
+      detectedPerRow:extracted.detectedPerRow,mmPerPixel:scale,uncertaintyMm:uncertainty};
+ }
+ function makeBaseline(result,recipeInput){
+   const recipe=validateRecipe(recipeInput);
+   if(!result||!['OK','REVIEW','NOK'].includes(result.status)||result.lanes.length!==recipe.count)
+     err('No se detectaron todas las tiras con referencia verificada');
+   return Object.freeze({schema:1,referenceMm:recipe.referenceMm,count:recipe.count,
+     centers:result.lanes.map(l=>l.centerPx),
+     widthsAtSampleMm:result.lanes.map(l=>l.meanMm)});
+ }
+ return Object.freeze({validateRecipe,findReferenceMarkers,extractStrips,evaluate,makeBaseline});
 });
 
 /* SPDX-License-Identifier: MIT
@@ -738,6 +998,73 @@ async function connectIp(){
   if(ok)info('Cámara IP conectada y primer JPEG captado. Calibra y activa inspección continua.');
 }
 
+/** Dedicated rubber-strip lab: shares the camera/IP acquisition and source canvas.
+ * No token, credentials, web write command or PLC access is exposed.
+ */
+function stripDemo(count=4,offsetPx=0,reset=false,oscillationPx=0){
+  if(reset){
+    stopAuto();stopCamera();stopIp();invalidateCalibration('Nueva muestra de tiras demo');
+  }
+  const width=1280,height=720;
+  if(source.width!==width||source.height!==height)updateSizes(width,height);
+  const centers={1:[640],2:[470,810],3:[340,640,940],4:[250,510,770,1030]}[count];
+  if(!centers)throw Error('Solo de 1 a 4 tiras');
+  sctx.fillStyle='#abb5b4';sctx.fillRect(0,0,width,height);
+  sctx.fillStyle='#bfc5c1';sctx.fillRect(85,87,1110,490);
+  sctx.strokeStyle='#dbe8dc';sctx.lineWidth=2;
+  for(let y=100;y<570;y+=58){sctx.beginPath();sctx.moveTo(90,y);sctx.lineTo(1190,y);sctx.stroke();}
+  centers.forEach((cx,i)=>{
+    const normalW=50+(i===Math.floor(count/2)?offsetPx:0);
+    for(let y=100;y<550;y++){
+      // Lateral drift and sinusoidal sway are allowed; the known sample width
+      // is perpendicular to the local tangent, not to the camera's X axis.
+      const wave=oscillationPx===0?0:22*Math.sin((y-100)/95+cx/140);
+      const slope=oscillationPx===0?0:(22/95)*Math.cos((y-100)/95+cx/140);
+      const center=cx+oscillationPx+wave;
+      const horizontalW=normalW*Math.hypot(1,slope);
+      sctx.fillStyle='#242a2e';sctx.fillRect(center-horizontalW/2,y,horizontalW,1);
+    }
+  });
+  // Synthetic fiducials. Real installations require physical, fixed marks in the same plane.
+  for(const [x,y,color] of [[100,649,'#13eddf'],[1100,649,'#f725ca']]){
+    sctx.fillStyle=color;sctx.beginPath();sctx.arc(x,y,10,0,Math.PI*2);sctx.fill();
+  }
+  roi={x:110,y:125,width:1060,height:390};
+  $('roi-label').textContent='ROI de tiras · 1060 × 390';
+  imageReady=true;lastSource='strip-demo';lastAnalysis=null;
+  $('source-label').textContent='DEMOSTRACIÓN SINTÉTICA · '+count+' tira(s) de goma';
+  setFeed('● CINTA SIMULADA',true);renderPicture();
+}
+window.ABVisionAcquisition=Object.freeze({
+  getFrame:()=>imageReady?getFrame():null,
+  getSourceId:()=>sourceIdentity(),
+  getRoi:()=>roi?{x:roi.x,y:roi.y,width:roi.width,height:roi.height}:null,
+  setRoi:next=>{
+    const rect=core.clampRect(next,source.width,source.height);
+    if(rect.x!==next.x||rect.y!==next.y||rect.width!==next.width||rect.height!==next.height)
+      throw new RangeError('ROI guardada no coincide con resolución actual');
+    roi=rect;$('roi-label').textContent='ROI de receta · '+rect.width+' × '+rect.height;
+    renderPicture(lastAnalysis);
+  },
+  isLive:()=>Boolean(stream||ipActive),
+  isStripDemo:()=>lastSource==='strip-demo',
+  stopDefectAuto:stopAuto,
+  refresh:async()=>ipActive?fetchIpFrame():stream?captureFrame():imageReady,
+  demo:stripDemo,
+  setOverlay:markers=>{
+    renderPicture();
+    if(!Array.isArray(markers))return;
+    vctx.save();vctx.lineWidth=Math.max(2,view.width/450);vctx.font='bold 15px sans-serif';
+    for(const marker of markers){
+      vctx.strokeStyle=marker.status==='OK'?'#30e9ac':marker.status==='NOK'?'#ff647b':'#ffd36d';
+      const x=marker.centerPx;
+      vctx.beginPath();vctx.moveTo(x,115);vctx.lineTo(x,550);vctx.stroke();
+      vctx.fillStyle=vctx.strokeStyle;
+      vctx.fillText('T'+marker.index+' '+marker.meanMm.toFixed(2)+' mm',Math.max(12,x-30),110);
+    }
+    vctx.restore();
+  }
+});
 function init() {
   try{const saved=JSON.parse(localStorage.getItem('ab-vision-recipe-v2')||localStorage.getItem('ab-vision-recipe-v1')||'null');if(saved?.recipe)applyRecipe(saved.recipe);if(saved?.metrology)applyMetrology(saved.metrology);}catch{}
   $('demo').addEventListener('click',createDemo);
@@ -778,6 +1105,315 @@ function init() {
   updateSliders();createDemo();
 }
 init();
+})();
+
+/* SPDX-License-Identifier: MIT · MS ROBOTIKA
+ * Strip-width HMI is intentionally read-only, local-first and fail closed.
+ * Does not import secrets, call PLC writes or persist camera images.
+ */
+(() => {
+'use strict';
+const $=id=>document.getElementById(id);
+const core=window.ABVisionCore, strips=window.ABStripCore,acq=window.ABVisionAcquisition;
+if(!core||!strips||!acq)throw Error('Motor de medición de tiras no disponible');
+const src=$('source'),view=$('overlay');
+let calibration=null,baseline=null,active=false,timer=null,busy=false;
+let seq=0,history=[],demoFault=false,demoOscillating=false;
+let liveRecipe=null;
+const memoryKey='abvision-strip-recipes-v1';
+const $txt=(id,value)=>$(id).textContent=String(value);
+const note=(message,error=false)=>{$txt('strip-message',message);$('strip-message').classList.toggle('error',error)};
+const state=(status,message)=>{
+  $txt('strip-status',message||status);
+  $('strip-status').className='strip-status '+(status==='OK'?'ok':status==='NOK'?'nok':'');
+  $txt('strip-verdict',status==='INVALID'?'SIN MEDICIÓN':status);
+  $('strip-verdict').dataset.state=status;
+};
+function defaultRoi(){
+  const roi=acq.getRoi();
+  if(roi)return roi;
+  const w=src.width,h=src.height;
+  return {x:Math.round(w*.10),y:Math.round(h*.20),
+    width:Math.floor(w*.80),height:Math.floor(h*.60)};
+}
+function fields(){
+  return strips.validateRecipe({
+    id:$('strip-id').value,count:Number($('strip-count').value),
+    nominalMm:Number($('strip-nominal').value),toleranceMm:Number($('strip-tolerance').value),
+    referenceMm:Number($('strip-reference').value),distanceMm:Number($('strip-distance').value),
+    polarity:$('strip-polarity').value,threshold:Number($('strip-threshold').value),
+    minRunPx:8,roi:defaultRoi()
+  });
+}
+function loadRecipe(recipe){
+  const valid=strips.validateRecipe(recipe);
+  for(const [id,value] of [
+    ['strip-id',valid.id],['strip-count',valid.count],
+    ['strip-nominal',valid.nominalMm],['strip-tolerance',valid.toleranceMm],
+    ['strip-reference',valid.referenceMm],['strip-distance',valid.distanceMm],
+    ['strip-polarity',valid.polarity],['strip-threshold',valid.threshold]
+  ])$(id).value=value;
+  calibration=null;baseline=null;liveRecipe=null;
+  stop();
+  try{acq.setRoi(valid.roi)}
+  catch{note('ROI guardada no coincide con resolución de cámara: selecciona de nuevo la región.',true)}
+  state('INVALID','RECETA CARGADA · RECALIBRAR');
+  $txt('strip-scale','SIN CALIBRAR');
+  $txt('strip-audit','La receta no contiene calibración activa; verifica marcas físicas');
+  note('Receta cargada: selecciona ROI si cambió el encuadre, comprueba patrón y calibra de nuevo.');
+}
+function loadSaved(){
+  try{
+    const data=JSON.parse(localStorage.getItem(memoryKey)||'{}');
+    if(!data||typeof data!=='object'||Array.isArray(data))return {};
+    const out={};
+    for(const [key,val] of Object.entries(data).slice(0,20)){
+      try{out[key]=strips.validateRecipe(val)}catch{}
+    }return out;
+  }catch{return {}}
+}
+function refreshSelect(){
+  const chosen=$('strip-saved').value;
+  $('strip-saved').replaceChildren(new Option('Selecciona una receta…',''));
+  for(const id of Object.keys(loadSaved()).sort()){
+    $('strip-saved').add(new Option(id,id));
+  }
+  if(chosen&&loadSaved()[chosen])$('strip-saved').value=chosen;
+}
+function saveRecipe(){
+  try{
+    const r=fields(), saved=loadSaved();
+    if(!saved[r.id]&&Object.keys(saved).length>=20)throw Error('Máximo 20 recetas locales. Exporta JSON antes de limpiar.');
+    saved[r.id]=r;
+    localStorage.setItem(memoryKey,JSON.stringify(saved));
+    refreshSelect();$('strip-saved').value=r.id;
+    note('Receta '+r.id+' guardada sin imágenes ni calibración activa. Al recuperarla será obligatorio revalidar.');
+  }catch(e){note('No se pudo guardar: '+e.message,true)}
+}
+function download(name,contents,mime){
+  const url=URL.createObjectURL(new Blob([contents],{type:mime}));
+  const a=document.createElement('a');a.href=url;a.download=name;
+  document.body.append(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1500);
+}
+function exportRecipe(){
+  try{
+    const r=fields();
+    download('AB-Vision-tiras-receta-'+r.id+'.json',JSON.stringify({
+      schema:'msrobotika.strip.recipe.v1',recipe:r,
+      calibration:'MUST_REVALIDATE_ON_EVERY_SESSION',
+      note:'No contiene escala auditada, imágenes, claves ni identidades de cámara.'
+    },null,2),'application/json');
+  }catch(e){note(e.message,true)}
+}
+async function importRecipe(e){
+  const file=e.target.files?.[0];
+  if(!file)return;
+  try{
+    if(file.size>24*1024)throw Error('Máximo 24 KB');
+    const json=JSON.parse(await file.text());
+    if(json.schema!=='msrobotika.strip.recipe.v1')throw Error('Esquema de receta no soportado');
+    loadRecipe(json.recipe);
+  }catch(error){note('Archivo rechazado: '+error.message,true)}
+  finally{e.target.value=''}
+}
+function csv(value){
+  let v=String(value??'');
+  if(/^\s*[=+@\-\t\r]/.test(v)&&!/^\s*-?\d+(\.\d+)?\s*$/.test(v))v="'"+v;
+  return '"'+v.replaceAll('"','""')+'"';
+}
+function exportCsv(){
+  const columns=['timestampUTC','recipe','frame','source','status','audit','reason',
+    'strip1Mm','strip2Mm','strip3Mm','strip4Mm','strip1Status','strip2Status',
+    'strip3Status','strip4Status','lateralShiftT1Px','lateralShiftT2Px',
+    'lateralShiftT3Px','lateralShiftT4Px','scaleMmPerPixel','uncertaintyMm'];
+  const rows=[columns.map(csv).join(',')];
+  for(const entry of history){
+    const vals=[entry.at,entry.recipe,entry.frame,entry.source,entry.status,entry.audit,entry.reason,
+      ...[0,1,2,3].map(i=>entry.lanes[i]?.meanMm??''),
+      ...[0,1,2,3].map(i=>entry.lanes[i]?.status??''),
+      ...[0,1,2,3].map(i=>entry.lanes[i]?.lateralShiftPx??''),
+      entry.mmPerPixel??'',entry.uncertaintyMm??''];
+    rows.push(vals.map(csv).join(','));
+  }
+  download('AB-Vision-tiras-traza-'+new Date().toISOString().slice(0,10)+'.csv',
+    rows.join('\r\n')+'\r\n','text/csv;charset=utf-8');
+}
+function renderHistory(){
+  const el=$('strip-history');el.replaceChildren();
+  if(!history.length){const row=document.createElement('tr'),td=document.createElement('td');
+    td.colSpan=7;td.textContent='Sin mediciones';row.append(td);el.append(row);return;}
+  for(const entry of history.slice(-14).reverse()){
+    const row=document.createElement('tr');
+    const values=[entry.at,entry.recipe,entry.frame,
+      entry.lanes.map(l=>l.meanMm.toFixed(2)).join(' / ')||'—',
+      entry.lanes.map(l=>('T'+l.index+' '+(l.deltaMm>=0?'+':'')+l.deltaMm.toFixed(2)+' mm')).join(' · ')||entry.reason||'—',
+      entry.status,entry.audit];
+    values.forEach(value=>{const td=document.createElement('td');td.textContent=String(value);row.append(td)});
+    el.append(row);
+  }
+}
+function trace(result,recipe,origin){
+  seq++;
+  const record={at:new Date().toISOString(),recipe:recipe.id,frame:seq,
+    source:origin,status:result.status,audit:result.auditStatus||'INVALID',
+    reason:result.reason||'',lanes:result.lanes||[],
+    mmPerPixel:result.mmPerPixel??null,uncertaintyMm:result.uncertaintyMm??null};
+  history.push(record);if(history.length>1000)history.shift();
+  $txt('strip-samples',history.length);
+  renderHistory();
+}
+function formatLanes(lanes){
+  return lanes?.length ? lanes.map(l=>'T'+l.index+': '+l.meanMm.toFixed(2)+' mm ('+l.status+')').join(' · ') : '—';
+}
+function measure({store=true}={}){
+  const recipe=liveRecipe;
+  if(!recipe||!calibration||!baseline){
+    state('INVALID','SIN PATRÓN AUDITADO');
+    $txt('strip-audit','Falta calibración de esta muestra');return null;
+  }
+  const frame=acq.getFrame();
+  if(!frame){state('INVALID','SIN FOTOGRAMA');return null;}
+  const audit=core.auditCameraFrame(frame,calibration,acq.getSourceId());
+  let result;
+  try{result=strips.evaluate(frame,recipe,calibration,audit,baseline)}
+  catch(error){result={status:'INVALID',reason:error.message,lanes:[],auditStatus:'INVALID'}}
+  state(result.status,result.status==='INVALID'?'SIN MEDICIÓN · BLOQUEADO':result.status+' · '+recipe.count+' TIRAS');
+  $txt('strip-audit',audit.status==='VERIFIED'?
+    'VERIFICADA EN ESTE FOTOGRAMA · incertidumbre indicativa ±'+audit.uncertaintyMm.toFixed(3)+' mm':
+    'NO VALIDADA · '+audit.reason);
+  $txt('strip-scale',audit.status==='VERIFIED'?audit.mmPerPixel.toFixed(5)+' mm/px':'ESCALA NO VALIDADA');
+  $txt('strip-widths',formatLanes(result.lanes));
+  acq.setOverlay(result.lanes);
+  if(store)trace(result,recipe,acq.isStripDemo()?'DEMO_SINTETICA':acq.isLive()?'CAMARA_LIVE':'IMAGEN_ESTATICA');
+  if(result.status==='INVALID')note('Lectura bloqueada: '+result.reason,true);
+  else if(result.status==='NOK')note('ALERTA: ancho fuera del margen en al menos una tira (inspección visual, NO control automático).',true);
+  else if(result.status==='REVIEW')note('REVISAR: la incertidumbre, el desplazamiento o el borde pueden afectar el veredicto.');
+  else note('Las '+recipe.count+' tiras están dentro de tolerancia visual en el fotograma actual.');
+  return result;
+}
+async function calibrate(){
+  stop();
+  try{
+    const frame=acq.getFrame();
+    if(!frame)throw Error('Primero activa webcam/IP o carga una muestra');
+    const r=fields();
+    const marks=strips.findReferenceMarkers(frame);
+    // The independent known-distance marks are checked by the existing v0.3 audit engine.
+    const cal=core.createAuditedCalibration(frame,marks,r.referenceMm,r.distanceMm,acq.getSourceId());
+    const audit=core.auditCameraFrame(frame,cal,acq.getSourceId());
+    if(audit.status!=='VERIFIED')throw Error(audit.reason);
+    const result=strips.evaluate(frame,r,cal,audit);
+    if(!result.lanes||result.lanes.length!==r.count)
+      throw Error(result.reason||'No se identificaron 1–4 tiras completas en todas las filas');
+    const base=strips.makeBaseline(result,r);
+    calibration=cal;baseline=base;liveRecipe=r;
+    $txt('strip-scale',audit.mmPerPixel.toFixed(5)+' mm/px');
+    $txt('strip-audit','VERIFICADA · marcadores fijos presentes en la captura');
+    state(result.status,'CALIBRADA · '+r.count+' TIRAS');
+    $txt('strip-widths',formatLanes(result.lanes));
+    acq.setOverlay(result.lanes);
+    note('Patrón encontrado automáticamente; '+r.count+' tira(s) detectadas. Anchuras de muestra '+base.widthsAtSampleMm.map(v=>v.toFixed(2)).join(' / ')+' mm. La tolerancia se evalúa frente al ancho NOMINAL, no se fuerza por esta muestra.');
+    trace(result,r,acq.isStripDemo()?'DEMO_SINTETICA':acq.isLive()?'CAMARA_LIVE':'IMAGEN_ESTATICA');
+  }catch(e){
+    calibration=null;baseline=null;liveRecipe=null;
+    state('INVALID','CALIBRACIÓN RECHAZADA');
+    $txt('strip-audit','NO VALIDADA · '+e.message);
+    note('Calibración no aceptada: '+e.message,true);
+  }
+}
+async function cycle(){
+  if(!active||busy)return;
+  busy=true;
+  try{
+    if(acq.isStripDemo()){
+      acq.demo(Number($('strip-count').value),demoFault?18:0,false,
+        demoOscillating?Math.round(55*Math.sin((seq+1)*.55)):0);
+    }else if(!acq.isLive() || !await acq.refresh()){
+      state('INVALID','FUENTE DESCONECTADA');
+      stop();note('Sin nuevos fotogramas. Lectura bloqueada y continuo detenido.',true);return;
+    }
+    measure();
+  }catch(e){
+    state('INVALID','ERROR DE ADQUISICIÓN');
+    stop();note('Adquisición detenida: '+e.message,true);
+  }finally{
+    busy=false;
+    if(active)timer=setTimeout(cycle,1000);
+  }
+}
+function stop(){
+  active=false;clearTimeout(timer);timer=null;
+  $('strip-run').textContent='⟳ Continuo: OFF';
+}
+function start(){
+  if(active){stop();note('Inspección continua detenida. Exporta el CSV si necesitas conservar trazabilidad.');return}
+  if(!calibration||!baseline||!liveRecipe){note('Primero detecta las marcas y calibra la muestra.',true);return}
+  if(!acq.isStripDemo()&&!acq.isLive()){note('El continuo requiere cámara USB/IP activa o demo, no una foto fija.',true);return}
+  acq.stopDefectAuto();active=true;$('strip-run').textContent='■ Detener continuo';
+  note('Seguimiento temporal a ~1 fotograma/s. Sin encoder no mide metros recorridos.');
+  timer=setTimeout(cycle,50);
+}
+function demo(){
+  stop();demoFault=false;demoOscillating=false;
+  $('strip-sway').textContent='Simular oscilación lateral: OFF';
+  acq.demo(Number($('strip-count').value),0,true);
+  calibration=null;baseline=null;liveRecipe=null;
+  state('INVALID','MUESTRA DEMO · CALIBRAR');
+  $txt('strip-scale','SIN CALIBRAR');
+  note('Cinta sintética cargada: patrón físico SIMULADO cian/magenta, pulsa «Detectar patrón y calibrar muestra».');
+}
+function changed(){
+  if(!calibration&&!baseline)return;
+  stop();calibration=null;baseline=null;liveRecipe=null;
+  state('INVALID','PARÁMETROS MODIFICADOS');
+  $txt('strip-scale','RECALIBRAR');$txt('strip-audit','Receta modificada: calibra de nuevo');
+  note('Parámetro cambiado. Calibración y muestra previas invalidadas.',true);
+}
+$('strip-demo').addEventListener('click',demo);
+$('strip-calibrate').addEventListener('click',calibrate);
+$('strip-once').addEventListener('click',async()=>{
+  if(acq.isLive()&&!await acq.refresh()){note('No hay fotograma actual',true);return}
+  if(!liveRecipe||!calibration){await calibrate();return}
+  measure();
+});
+$('strip-run').addEventListener('click',start);
+$('strip-fault').addEventListener('click',()=>{
+  if(!acq.isStripDemo()){note('La inyección de fallo solo existe en el laboratorio sintético.',true);return}
+  demoFault=!demoFault;
+  acq.demo(Number($('strip-count').value),demoFault?18:0,false,
+    demoOscillating?Math.round(55*Math.sin((seq+1)*.55)):0);
+  note('Fallo de anchura sintético '+(demoFault?'ACTIVO':'DESACTIVADO')+'. Vuelve a medir.');
+  if(!active)measure();
+});
+$('strip-sway').addEventListener('click',()=>{
+  if(!acq.isStripDemo()){note('La simulación de oscilación solo está disponible en el laboratorio.',true);return;}
+  demoOscillating=!demoOscillating;
+  $('strip-sway').textContent='Simular oscilación lateral: '+(demoOscillating?'ON':'OFF');
+  acq.demo(Number($('strip-count').value),demoFault?18:0,false,
+    demoOscillating?55:0);
+  note('La oscilación transversal no es defecto. Solo habrá alerta si la anchura sale de tolerancia o se pierde la ROI.');
+  if(!active)measure();
+});
+$('strip-save').addEventListener('click',saveRecipe);
+$('strip-saved').addEventListener('change',()=>{
+  const r=loadSaved()[$('strip-saved').value];if(r)loadRecipe(r);
+});
+$('strip-export-recipe').addEventListener('click',exportRecipe);
+$('strip-import-recipe').addEventListener('change',importRecipe);
+$('strip-export-csv').addEventListener('click',exportCsv);
+$('strip-export-png').addEventListener('click',()=>{
+  if(!acq.getFrame()){note('No hay imagen para guardar',true);return}
+  const canvas=$('overlay');canvas.toBlob(blob=>{
+    if(blob)download('AB-Vision-tiras-evidencia-'+seq+'.png',blob,'image/png');
+  },'image/png');
+});
+for(const id of ['strip-id','strip-count','strip-nominal','strip-tolerance',
+  'strip-reference','strip-distance','strip-polarity','strip-threshold'])
+  $(id).addEventListener('change',changed);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)stop()});
+window.addEventListener('pagehide',stop);
+refreshSelect();
 })();
 
 </script></body></html>
