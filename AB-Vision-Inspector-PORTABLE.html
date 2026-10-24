@@ -26,6 +26,7 @@
 .audit-bad{background:#492a29;color:#ffd1a2}
 
 
+
 /* 1–4 strip width inspection · local industrial lab, scoped styles */
 .strip-module{border:1px solid #356b69;border-radius:13px;background:linear-gradient(145deg,#101f2a,#12232f);margin:24px 0;padding:24px;box-shadow:0 12px 40px #06101a50}
 .strip-heading{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}
@@ -1226,14 +1227,20 @@ function exportCsv(){
   const columns=['timestampUTC','recipe','frame','source','status','audit','reason',
     'strip1Mm','strip2Mm','strip3Mm','strip4Mm','strip1Status','strip2Status',
     'strip3Status','strip4Status','lateralShiftT1Px','lateralShiftT2Px',
-    'lateralShiftT3Px','lateralShiftT4Px','scaleMmPerPixel','uncertaintyMm'];
+    'lateralShiftT3Px','lateralShiftT4Px','scaleMmPerPixel','uncertaintyMm',
+    'nominalMm','tolerancePlusMinusMm','referenceDistanceMm','cameraHeightMm',
+    'strip1MinMm','strip2MinMm','strip3MinMm','strip4MinMm',
+    'strip1MaxMm','strip2MaxMm','strip3MaxMm','strip4MaxMm'];
   const rows=[columns.map(csv).join(',')];
   for(const entry of history){
     const vals=[entry.at,entry.recipe,entry.frame,entry.source,entry.status,entry.audit,entry.reason,
       ...[0,1,2,3].map(i=>entry.lanes[i]?.meanMm??''),
       ...[0,1,2,3].map(i=>entry.lanes[i]?.status??''),
       ...[0,1,2,3].map(i=>entry.lanes[i]?.lateralShiftPx??''),
-      entry.mmPerPixel??'',entry.uncertaintyMm??''];
+      entry.mmPerPixel??'',entry.uncertaintyMm??'',
+      entry.nominalMm??'',entry.toleranceMm??'',entry.referenceMm??'',entry.distanceMm??'',
+      ...[0,1,2,3].map(i=>entry.lanes[i]?.minMm??''),
+      ...[0,1,2,3].map(i=>entry.lanes[i]?.maxMm??'')];
     rows.push(vals.map(csv).join(','));
   }
   download('AB-Vision-tiras-traza-'+new Date().toISOString().slice(0,10)+'.csv',
@@ -1258,7 +1265,9 @@ function trace(result,recipe,origin){
   const record={at:new Date().toISOString(),recipe:recipe.id,frame:seq,
     source:origin,status:result.status,audit:result.auditStatus||'INVALID',
     reason:result.reason||'',lanes:result.lanes||[],
-    mmPerPixel:result.mmPerPixel??null,uncertaintyMm:result.uncertaintyMm??null};
+    mmPerPixel:result.mmPerPixel??null,uncertaintyMm:result.uncertaintyMm??null,
+    nominalMm:recipe.nominalMm,toleranceMm:recipe.toleranceMm,
+    referenceMm:recipe.referenceMm,distanceMm:recipe.distanceMm};
   history.push(record);if(history.length>1000)history.shift();
   $txt('strip-samples',history.length);
   renderHistory();
@@ -1295,6 +1304,10 @@ function measure({store=true}={}){
 async function calibrate(){
   stop();
   try{
+    // Never calibrate a webcam/IP against a stale captured image. Users position
+    // the sample AFTER activating the camera; acquire a fresh frame right now.
+    if(acq.isLive() && !await acq.refresh())
+      throw Error('No se pudo obtener fotograma ACTUAL de la cámara; comprueba vídeo y conexión');
     const frame=acq.getFrame();
     if(!frame)throw Error('Primero activa webcam/IP o carga una muestra');
     const r=fields();
