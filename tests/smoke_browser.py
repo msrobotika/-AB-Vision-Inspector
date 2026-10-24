@@ -188,6 +188,49 @@ class BrowserSmoke(unittest.TestCase):
         page.screenshot(path=str(OUT/"vision-tiras-referencia-perdida.png"),full_page=True)
         page.close()
 
+
+    def test_strip_csv_has_lot_limits_and_extrema_for_traceability(self):
+        page=self.new_page(1400,960)
+        page.set_content(PORTABLE.read_text(encoding="utf-8"),wait_until="load")
+        page.locator("#strip-demo").click()
+        page.locator("#strip-calibrate").click()
+        page.locator("#strip-fault").click()
+        with page.expect_download() as download:
+            page.locator("#strip-export-csv").click()
+        file=download.value.path()
+        text=file.read_text(encoding="utf-8-sig")
+        self.assertIn("nominalMm",text)
+        self.assertIn("tolerancePlusMinusMm",text)
+        self.assertIn("strip1MinMm",text)
+        self.assertIn("strip4MaxMm",text)
+        self.assertIn("NOK",text)
+        self.assertIn("GOMA-LINEA-01",text)
+        page.close()
+
+    def test_live_calibration_fetches_new_frame_not_a_stale_sample(self):
+        page=self.new_page(1400,960)
+        page.add_init_script("""() => {
+          let acquisition;
+          window.__refreshCounter=0;
+          Object.defineProperty(window,'ABVisionAcquisition',{
+            configurable:true,
+            get(){return acquisition;},
+            set(value){
+              acquisition=Object.freeze({
+                ...value,
+                isLive:()=>true,
+                refresh:async()=>{window.__refreshCounter++;return true;}
+              });
+            }
+          });
+        }""")
+        page.goto(self.url,wait_until="load")
+        page.locator("#strip-demo").click()
+        page.locator("#strip-calibrate").click()
+        self.assertEqual(page.evaluate("window.__refreshCounter"),1)
+        self.assertEqual(page.locator("#strip-verdict").inner_text(),"OK")
+        page.close()
+
     def test_strip_direct_html_assets_are_self_contained(self):
         content=PORTABLE.read_text(encoding="utf-8")
         self.assertIn("ABStripCore",content)
