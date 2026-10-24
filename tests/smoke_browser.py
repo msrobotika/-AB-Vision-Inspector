@@ -209,7 +209,7 @@ class BrowserSmoke(unittest.TestCase):
 
     def test_live_calibration_fetches_new_frame_not_a_stale_sample(self):
         page=self.new_page(1400,960)
-        page.add_init_script("""() => {
+        page.add_init_script("""(() => {
           let acquisition;
           window.__refreshCounter=0;
           Object.defineProperty(window,'ABVisionAcquisition',{
@@ -223,7 +223,7 @@ class BrowserSmoke(unittest.TestCase):
               });
             }
           });
-        }""")
+        })()""")
         page.goto(self.url,wait_until="load")
         page.locator("#strip-demo").click()
         page.locator("#strip-calibrate").click()
