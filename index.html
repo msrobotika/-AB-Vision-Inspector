@@ -101,6 +101,7 @@
         <button id="strip-export-csv" type="button">Exportar CSV de mediciones</button>
         <button id="strip-export-png" type="button">Guardar imagen anotada</button>
       </div>
+      <label class="strip-opt-in"><input type="checkbox" id="strip-evidence-auto"> Guardar en memoria imagen anotada de cada nuevo NOK (opt-in; máx. 12, sin subirla a la red)</label>
       <p id="strip-message" class="small-muted" role="status" aria-live="polite">Empieza con «Cinta demo» para ver cuatro tiras, o conecta la cámara USB/IP desde el visor de arriba y configura el patrón físico.</p>
     </div>
     <div class="strip-results">
@@ -109,6 +110,7 @@
       <div><small>MUESTRAS EN ESTA SESIÓN</small><strong id="strip-samples">0</strong></div>
       <div><small>ÚLTIMAS ANCHURAS POR TIRA</small><p id="strip-widths">—</p></div>
       <div><small>AUDITORÍA DE CÁMARA</small><p id="strip-audit">NO VALIDADA · espera referencia física</p></div>
+      <div class="strip-evidence-wrap"><small>EVIDENCIAS VISUALES · SOLO EN ESTA SESIÓN</small><div id="strip-evidence" class="strip-evidence-gallery" aria-live="polite"><span>Aún no hay fotogramas NOK guardados</span></div></div>
     </div>
   </div>
   <div class="table-scroller"><table><thead><tr><th>HORA UTC</th><th>RECETA</th><th>FOTOGRAMA</th><th>ANCHOS T1 / T2 / T3 / T4 (mm)</th><th>DESVIACIÓN / VARIACIÓN</th><th>ESTADO</th><th>AUDITORÍA</th></tr></thead><tbody id="strip-history"><tr><td colspan="7">Sin mediciones. Los fotogramas se procesan localmente; no se archivan automáticamente.</td></tr></tbody></table></div>

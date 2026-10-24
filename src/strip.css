@@ -29,3 +29,6 @@
 @media(max-width:1250px){.strip-fields{grid-template-columns:repeat(2,minmax(125px,1fr))}}
 @media(max-width:850px){.strip-grid{grid-template-columns:1fr}.strip-results{grid-template-columns:repeat(2,minmax(0,1fr))}.strip-heading{flex-direction:column}.strip-status{white-space:normal}}
 @media(max-width:480px){.strip-module{padding:13px;margin:18px 0}.strip-fields{grid-template-columns:1fr 1fr;gap:8px}.strip-results{grid-template-columns:1fr 1fr}.strip-heading h2{font-size:19px}.strip-actions select{max-width:100%}}
+
+/* Visual quality evidence is opt-in, held in this page's memory only. */
+.strip-opt-in{display:flex;align-items:center;gap:10px;margin:10px 0;color:#aed2d1;font-size:12px;line-height:1.5;cursor:pointer}.strip-opt-in input{accent-color:#45d5ba;width:17px;height:17px;flex:none}.strip-evidence-wrap{grid-column:1/-1}.strip-evidence-gallery{display:flex;flex-wrap:wrap;gap:9px;margin-top:8px;align-items:start}.strip-evidence-gallery>span{color:#90a8ad;font-size:11px}.strip-evidence-item{display:grid;gap:5px;max-width:144px}.strip-evidence-item img{width:144px;aspect-ratio:16/9;object-fit:contain;background:#07111c;border-radius:5px;border:1px solid #506474}.strip-evidence-item button{font-size:10px;line-height:1.35;white-space:normal;padding:6px 7px}.strip-evidence-item small{font-size:9px;color:#91aebb}

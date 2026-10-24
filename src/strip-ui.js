@@ -10,6 +10,7 @@ if(!core||!strips||!acq)throw Error('Motor de medición de tiras no disponible')
 const src=$('source'),view=$('overlay');
 let calibration=null,baseline=null,active=false,timer=null,busy=false;
 let seq=0,history=[],demoFault=false,demoOscillating=false;
+let evidence=[],lastEvidenceAt=0,previousVerdict='INVALID';
 let liveRecipe=null;
 const memoryKey='abvision-strip-recipes-v1';
 const $txt=(id,value)=>$(id).textContent=String(value);
@@ -117,14 +118,20 @@ function exportCsv(){
   const columns=['timestampUTC','recipe','frame','source','status','audit','reason',
     'strip1Mm','strip2Mm','strip3Mm','strip4Mm','strip1Status','strip2Status',
     'strip3Status','strip4Status','lateralShiftT1Px','lateralShiftT2Px',
-    'lateralShiftT3Px','lateralShiftT4Px','scaleMmPerPixel','uncertaintyMm'];
+    'lateralShiftT3Px','lateralShiftT4Px','scaleMmPerPixel','uncertaintyMm',
+    'nominalMm','tolerancePlusMinusMm','referenceDistanceMm','cameraHeightMm',
+    'strip1MinMm','strip2MinMm','strip3MinMm','strip4MinMm',
+    'strip1MaxMm','strip2MaxMm','strip3MaxMm','strip4MaxMm','evidenceId'];
   const rows=[columns.map(csv).join(',')];
   for(const entry of history){
     const vals=[entry.at,entry.recipe,entry.frame,entry.source,entry.status,entry.audit,entry.reason,
       ...[0,1,2,3].map(i=>entry.lanes[i]?.meanMm??''),
       ...[0,1,2,3].map(i=>entry.lanes[i]?.status??''),
       ...[0,1,2,3].map(i=>entry.lanes[i]?.lateralShiftPx??''),
-      entry.mmPerPixel??'',entry.uncertaintyMm??''];
+      entry.mmPerPixel??'',entry.uncertaintyMm??'',
+      entry.nominalMm??'',entry.toleranceMm??'',entry.referenceMm??'',entry.distanceMm??'',
+      ...[0,1,2,3].map(i=>entry.lanes[i]?.minMm??''),
+      ...[0,1,2,3].map(i=>entry.lanes[i]?.maxMm??''),entry.evidenceId??''];
     rows.push(vals.map(csv).join(','));
   }
   download('AB-Vision-tiras-traza-'+new Date().toISOString().slice(0,10)+'.csv',
@@ -144,12 +151,41 @@ function renderHistory(){
     el.append(row);
   }
 }
+function renderEvidence(){
+  const gallery=$('strip-evidence');gallery.replaceChildren();
+  if(!evidence.length){const empty=document.createElement('span');
+    empty.textContent='Sin NOK guardados (activa casilla opcional).';gallery.append(empty);return;}
+  for(const item of evidence.slice().reverse()){
+    const card=document.createElement('div');card.className='strip-evidence-item';
+    const img=document.createElement('img');img.src=item.dataUrl;img.loading='lazy';
+    img.alt='Captura anotada del NOK '+item.id+' · '+item.recipe;
+    const button=document.createElement('button');button.type='button';
+    button.dataset.evidence=item.id;button.textContent='↓ Guardar imagen '+item.id;
+    const label=document.createElement('small');label.textContent=item.at.slice(11,19)+' UTC';
+    card.append(img,button,label);gallery.append(card);
+  }
+}
+function storeIncident(result,recipe,origin){
+  const old=previousVerdict;previousVerdict=result.status;
+  if(result.status!=='NOK'||!$('strip-evidence-auto').checked)return null;
+  const now=Date.now();
+  if(old==='NOK' && now-lastEvidenceAt<15000)return null;
+  const id='NOK-'+String(seq).padStart(6,'0');
+  const item={id,at:new Date(now).toISOString(),recipe:recipe.id,source:origin,
+    dataUrl:view.toDataURL('image/png')};
+  evidence.push(item);if(evidence.length>12)evidence.shift();
+  lastEvidenceAt=now;renderEvidence();
+  return id;
+}
 function trace(result,recipe,origin){
   seq++;
   const record={at:new Date().toISOString(),recipe:recipe.id,frame:seq,
     source:origin,status:result.status,audit:result.auditStatus||'INVALID',
     reason:result.reason||'',lanes:result.lanes||[],
-    mmPerPixel:result.mmPerPixel??null,uncertaintyMm:result.uncertaintyMm??null};
+    mmPerPixel:result.mmPerPixel??null,uncertaintyMm:result.uncertaintyMm??null,
+    nominalMm:recipe.nominalMm,toleranceMm:recipe.toleranceMm,
+    referenceMm:recipe.referenceMm,distanceMm:recipe.distanceMm,
+    evidenceId:storeIncident(result,recipe,origin)};
   history.push(record);if(history.length>1000)history.shift();
   $txt('strip-samples',history.length);
   renderHistory();
@@ -186,6 +222,10 @@ function measure({store=true}={}){
 async function calibrate(){
   stop();
   try{
+    // Never calibrate a webcam/IP against a stale captured image. Users position
+    // the sample AFTER activating the camera; acquire a fresh frame right now.
+    if(acq.isLive() && !await acq.refresh())
+      throw Error('No se pudo obtener fotograma ACTUAL de la cámara; comprueba vídeo y conexión');
     const frame=acq.getFrame();
     if(!frame)throw Error('Primero activa webcam/IP o carga una muestra');
     const r=fields();
@@ -293,6 +333,15 @@ $('strip-saved').addEventListener('change',()=>{
 $('strip-export-recipe').addEventListener('click',exportRecipe);
 $('strip-import-recipe').addEventListener('change',importRecipe);
 $('strip-export-csv').addEventListener('click',exportCsv);
+$('strip-evidence').addEventListener('click',event=>{
+  const button=event.target.closest('button[data-evidence]');
+  if(!button)return;
+  const item=evidence.find(x=>x.id===button.dataset.evidence);
+  if(!item)return;
+  const a=document.createElement('a');a.href=item.dataUrl;
+  a.download='AB-Vision-'+item.recipe+'-'+item.id+'.png';
+  document.body.append(a);a.click();a.remove();
+});
 $('strip-export-png').addEventListener('click',()=>{
   if(!acq.getFrame()){note('No hay imagen para guardar',true);return}
   const canvas=$('overlay');canvas.toBlob(blob=>{
@@ -304,5 +353,5 @@ for(const id of ['strip-id','strip-count','strip-nominal','strip-tolerance',
   $(id).addEventListener('change',changed);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)stop()});
 window.addEventListener('pagehide',stop);
-refreshSelect();
+refreshSelect();renderEvidence();
 })();
