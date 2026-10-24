@@ -30,7 +30,7 @@ RTSP/H.264 u ONVIF sin snapshot JPEG requieren un **puente local autorizado** ad
 
 Guarda ID, número de tiras (1–4), ancho nominal, tolerancia ± en mm, referencia física, altura, ROI, polaridad y umbral. Las recetas pueden recuperarse del navegador o exportarse/importarse como JSON. **Cargar una receta no habilita la escala:** es necesario volver a comprobar los marcadores y recalibrar.
 
-El CSV registra instante UTC, fuente sin contraseña ni IP, fotograma, resultado, causa, estado por tira, desviación, media, mínima y máxima por carril, escala e incertidumbre orientativa, más nominal/tolerancia y referencia física. Hasta 1000 registros en RAM; exporta antes de cerrar. El PNG anotado se descarga manualmente.
+El CSV registra instante UTC, fuente sin contraseña ni IP, fotograma, resultado, causa, estado por tira, desviación, media, mínima y máxima por carril, escala e incertidumbre orientativa, más nominal/tolerancia y referencia física. Hasta 1000 registros en RAM; exporta antes de cerrar. El PNG anotado se descarga manualmente; si activaste la casilla, la galería conserva capturas de incidentes NOK y el CSV incluye su identificador de evidencia. Máximo 12 capturas en RAM, sin nube ni almacenamiento persistente.
 
 Una tira que oscila lateralmente no es NOK mientras conserve su anchura. Si sale de la ROI o se superpone, el estado es SIN MEDICIÓN. Sin encoder no se identifica la longitud/metro defectuoso, solo el instante del fotograma.
 
