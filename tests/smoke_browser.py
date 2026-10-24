@@ -231,6 +231,30 @@ class BrowserSmoke(unittest.TestCase):
         self.assertEqual(page.locator("#strip-verdict").inner_text(),"OK")
         page.close()
 
+
+    def test_strip_nok_visual_evidence_is_opt_in_and_downloadable(self):
+        page=self.new_page(1440,960)
+        page.set_content(PORTABLE.read_text(encoding="utf-8"),wait_until="load")
+        page.locator("#strip-demo").click()
+        page.locator("#strip-calibrate").click()
+        page.locator("#strip-fault").click()
+        self.assertEqual(page.locator("#strip-verdict").inner_text(),"NOK")
+        self.assertEqual(page.locator("#strip-evidence img").count(),0,
+                         "Sin consentimiento no se debe almacenar ninguna foto")
+        # Toggle the synthetic fault off, then enable opt-in.
+        page.locator("#strip-fault").click()
+        page.locator("#strip-evidence-auto").check()
+        page.locator("#strip-fault").click()
+        self.assertEqual(page.locator("#strip-evidence img").count(),1)
+        with page.expect_download() as d:
+            page.locator("#strip-evidence button[data-evidence]").click()
+        self.assertTrue(d.value.suggested_filename.endswith(".png"))
+        with page.expect_download() as d:
+            page.locator("#strip-export-csv").click()
+        self.assertIn("evidenceId",d.value.path().read_text(encoding="utf-8"))
+        self.assertIn("NOK-000",d.value.path().read_text(encoding="utf-8"))
+        page.close()
+
     def test_strip_direct_html_assets_are_self_contained(self):
         content=PORTABLE.read_text(encoding="utf-8")
         self.assertIn("ABStripCore",content)
